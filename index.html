@@ -374,6 +374,7 @@ const META=[
 ['presentWk','Share of roster working on a weekday','',.72,.55,.9,.01,'ib','Operations',false],
 ['hireLag','Hiring lead time','days',45,15,90,5,'ib','Operations',true],
 ['rampDays','New-hire ramp','days',45,15,90,5,'ib','Operations',false],
+['rampProd','New-hire productivity during ramp (share of a tenured agent)','×',.5,.2,.8,.05,'ib','Operations',false],
 ['targetUtil','Staffing target utilization','',.85,.7,.95,.01,'ib','Operations',false],
 ['baseAttr','Baseline annual agent attrition','',.18,.08,.35,.01,'ib','People',true],
 ['replaceFrac','Cost to replace a leaver (share of annual cost)','',.35,.1,.8,.05,'ib','People',false],
@@ -1004,7 +1005,7 @@ function recomputeNow(seeds){applyShockUI();compute(seeds||5);renderAll(false);$
 // ---------- tour ----------
 const SC=[
  {id:'s-hero',t:'The mandate',txt:()=>`Same 90 days of demand, four operating models. The playbook handles the growth at ${fmt.usd1(S.R.res.pb.sc.cpt)} per ticket and ${fmt.m2(S.R.res.pb.sc.arr)} of revenue at risk.`},
- {id:'s-decouple',t:'Decouple headcount from volume',txt:()=>{const r=S.R.res;return `Volume rises about ${(100*(r.pb.daily.tick[89]/r.pb.daily.tick[0]-1)).toFixed(0)}% from day 1 to 90 (weekly rhythm included); playbook headcount ends at ${r.pb.sc.fte.toFixed(0)} vs ${r.sq.sc.fte.toFixed(0)} for the status quo.`;}},
+ {id:'s-decouple',t:'Decouple headcount from volume',txt:()=>{const r=S.R.res,tk=r.pb.daily.tick,av=(a,b)=>{let x=0;for(let i=a;i<b;i++)x+=tk[i];return x/(b-a);};return `Volume rises about ${(100*(av(77,90)/av(0,13)-1)).toFixed(0)}% between the first and last two weeks of the quarter; playbook headcount ends at ${r.pb.sc.fte.toFixed(0)} vs ${r.sq.sc.fte.toFixed(0)} for the status quo.`;}},
  {id:'cardFrontier',t:'Cost vs. risk',txt:()=>`Cost-out looks cheapest and carries ${fmt.m2(S.R.res.co.sc.expo)} of exposure. The fortress is safe but slow. The playbook sits where cost, risk and service balance.`},
  {id:'s-rhythm',t:'90 days in 14 seconds',txt:()=>'Watch the phases switch on and the month-end peaks hit. Diamonds mark kill-criterion trips.'},
  {id:'s-fts',t:'Follow-the-sun',txt:()=>'Tickets stall at shift boundaries. Handoff summaries, overlap and a priority lane flatten the curve.'},
@@ -1066,7 +1067,7 @@ function wire(){
  $('#dayslider').addEventListener('input',e=>{userTouch();S.day=parseInt(e.target.value);renderDay();});
  let dTok=0;$('#dPlay').addEventListener('click',async()=>{userTouch();const my=++dTok;S.day=1;renderDay();const t0=performance.now(),dur=12000;while(my===dTok){const p=Math.min(1,(performance.now()-t0)/dur);const d=Math.max(1,Math.round(1+p*89));if(d!==S.day){S.day=d;renderDay();}if(p>=1)break;await sleep(60);}});
  $('#resetBtn').addEventListener('click',()=>{userTouch();const sh=S.C.shocks;S.C=clone(E.DEFC);S.C.shocks=sh;schedule();});
- $('#resetA').addEventListener('click',()=>{userTouch();S.A=clone(E.DEF);buildAssumptions();$('#sensRun').addEventListener('click',runSens);schedule();});
+ $('#resetA').addEventListener('click',()=>{userTouch();S.A=clone(E.DEF);buildAssumptions();schedule();});
  ['shStat','shOut','shLat'].forEach(id=>$('#'+id).addEventListener('change',()=>{userTouch();schedule();}));
  ['shStatD','shOutD','shLatD'].forEach(id=>$('#'+id).addEventListener('input',()=>{userTouch();applyShockUI();if(S.C.shocks.stat||S.C.shocks.outage||S.C.shocks.latam)schedule();}));
  $('#copyMemo').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(S.memoText);$('#copyMemo').textContent='Copied ✓';}catch(e){const ta=document.createElement('textarea');ta.value=S.memoText;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();$('#copyMemo').textContent='Copied ✓';}setTimeout(()=>$('#copyMemo').textContent='Copy text',1600);});
