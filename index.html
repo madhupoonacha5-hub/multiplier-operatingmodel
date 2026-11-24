@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Global Support Operating Model · Executive Digital Twin</title>
+<meta name="description" content="Interactive 90-day digital twin of a two-sided global EOR support operation. Seeded simulation, live KPIs, stress-test mode.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Palette approximated from the warm-orange look of Multiplier's rebrand.
+   Edit these variables to match brand guidelines exactly. */
+:root{
+  --orange:#FF5A1F; --orange-600:#E04A10; --orange-200:#FFC9B0; --orange-100:#FFE8DC; --orange-50:#FFF3EB;
+  --cream:#FFF8F2; --ink:#2B1B14; --ink-2:#6E5C52; --ink-3:#A39388; --line:#F1DFD2; --card:#FFFFFF;
+  --green:#1F9D6B; --red:#D63A3A; --amber:#EFA100;
+  --c-sq:#8C7B70; --c-co:#EFA100; --c-fo:#B04A5A; --c-pb:#FF5A1F;
+  --radius:18px; --shadow:0 1px 2px rgba(43,27,20,.04),0 8px 28px rgba(43,27,20,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+header.top{position:sticky;top:0;z-index:50;background:rgba(255,248,242,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:34px;height:34px;border-radius:11px;background:var(--orange);display:grid;place-items:center;flex:none}
+.mark i{display:block;width:14px;height:18px;border-radius:7px 7px 3px 3px;background:var(--cream)}
+.brand b{font-size:16px;letter-spacing:-.01em;white-space:nowrap}
+.brand small{display:block;color:var(--ink-2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{flex:1}
+.tcontrols{display:flex;align-items:center;gap:8px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 14px;font:600 13px "DM Sans",sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.btn:hover{border-color:var(--orange-200);background:var(--orange-50)}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.primary:hover{background:var(--orange-600)}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:default}
+.tourbar{border-top:1px solid var(--line);background:#fff}
+.tour-in{display:flex;align-items:center;gap:14px;min-height:46px;padding:7px 0}
+.steps{display:flex;gap:5px;flex:none}
+.steps i{width:22px;height:6px;border-radius:4px;background:var(--line);cursor:pointer;position:relative;overflow:hidden}
+.steps i.done{background:var(--orange-200)}
+.steps i.on{background:var(--orange)}
+.cap{font-size:13.5px;color:var(--ink);min-width:0}
+.cap b{color:var(--orange-600);margin-right:6px}
+.pill{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);background:var(--orange-50);border:1px solid var(--line);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.status{font-size:12px;color:var(--ink-3);white-space:nowrap}
+section{padding:46px 0 8px;scroll-margin-top:128px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-600)}
+h1{font-size:clamp(28px,4vw,46px);line-height:1.08;letter-spacing:-.025em;margin:8px 0 12px;font-weight:800;max-width:980px}
+h2{font-size:clamp(22px,2.6vw,30px);letter-spacing:-.02em;margin:6px 0 6px;font-weight:800}
+.lede{color:var(--ink-2);font-size:16.5px;max-width:900px;margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.card h3{margin:0 0 4px;font-size:15px;font-weight:700}
+.card .sub{color:var(--ink-2);font-size:13px;margin:0 0 10px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.g6{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){.g2,.g3{grid-template-columns:1fr}.g6{grid-template-columns:repeat(2,1fr)}.top-in{height:58px}.brand small{display:none}.tour-in{flex-wrap:wrap}.wrap{padding:0 16px}}
+.kpi{padding:16px 16px 14px;position:relative;overflow:hidden}
+.kpi .lab{font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:6px;min-height:32px}
+.kpi .val{font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .cmp{margin-top:8px;font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{font-weight:700;font-size:11.5px;border-radius:999px;padding:2px 8px}
+.chip.good{background:#E4F6EE;color:#0F7A51}
+.chip.bad{background:#FCE6E6;color:#B22626}
+.chip.flat{background:#F3ECE6;color:var(--ink-2)}
+.kpi.sec .val{font-size:22px}
+.kpi.sec{padding:13px 14px}
+.kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--orange)}
+.kpi.sec::after{background:var(--orange-200)}
+.playhead{display:flex;align-items:center;gap:14px;margin:18px 0 16px;flex-wrap:wrap}
+.playhead input[type=range]{flex:1;min-width:200px}
+.dayno{font-weight:800;font-size:18px;min-width:96px;font-variant-numeric:tabular-nums}
+.phasetag{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--orange-100);color:var(--orange-600)}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:var(--line);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--orange);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--orange);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+svg text{font-family:"DM Sans",system-ui,sans-serif}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin:6px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:4px;border-radius:2px;display:inline-block}
+.draw path.ln{stroke-dasharray:1;stroke-dashoffset:1;animation:dash 1.8s ease forwards}
+@keyframes dash{to{stroke-dashoffset:0}}
+table.cmp{width:100%;border-collapse:collapse;font-size:13.5px}
+table.cmp th,table.cmp td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+table.cmp th{font-size:12px;color:var(--ink-2);font-weight:700;vertical-align:bottom}
+table.cmp td.best{background:var(--orange-50);font-weight:800}
+table.cmp td.pb,table.cmp th.pb{border-left:2px solid var(--orange-200)}
+table.cmp small{display:block;color:var(--ink-3);font-weight:500;font-size:11px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.phase{position:relative}
+.phase .n{font-size:12px;font-weight:800;color:var(--orange-600);letter-spacing:.08em;text-transform:uppercase}
+.phase h3{font-size:18px;margin:2px 0 6px}
+.phase ul{margin:6px 0 10px;padding-left:18px;color:var(--ink-2);font-size:13px}
+.ind{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-top:1px dashed var(--line)}
+.ind b{font-variant-numeric:tabular-nums}
+.ind .ok{color:var(--green)}.ind .no{color:var(--red)}
+.kill{margin-top:8px;font-size:12px;background:#FFF1EC;border:1px solid var(--orange-200);border-radius:10px;padding:8px 10px;color:var(--ink)}
+.bars{display:grid;grid-template-columns:140px 1fr 54px;gap:8px 10px;align-items:center;font-size:12.5px}
+.bars .seg{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--line)}
+.bars .seg span{height:100%;transition:width 1.1s cubic-bezier(.2,.8,.2,1);min-width:0}
+.bars .r{text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fire{background:#B3261E}.red{background:#E8554E}.amber{background:#F2B43C}.green{background:#2FAE7C}
+.ctl{margin-bottom:14px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:13.5px}
+.ctl .row output{color:var(--orange-600);font-weight:800;font-variant-numeric:tabular-nums}
+.ctl input[type=range]{width:100%;margin:8px 0 2px}
+.ctl small{color:var(--ink-3);font-size:12px;display:block}
+.tog{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px;cursor:pointer}
+.tog input{accent-color:var(--orange);width:17px;height:17px;margin-top:2px;flex:none}
+.shock{display:grid;grid-template-columns:auto 1fr 76px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.shock input[type=checkbox]{accent-color:var(--red);width:17px;height:17px}
+.shock output{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red)}
+.insight{background:var(--orange-50);border:1px solid var(--orange-200);border-radius:14px;padding:12px 14px;font-size:13.5px;margin-top:12px}
+.insight b{color:var(--orange-600)}
+.insight ul{margin:6px 0 0;padding-left:18px}
+.memo{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:34px 40px;box-shadow:var(--shadow);max-width:860px}
+.memo h4{margin:20px 0 6px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--orange-600)}
+.memo p,.memo li{font-size:14.5px;color:var(--ink)}
+.memo .hd{border-bottom:2px solid var(--orange);padding-bottom:12px;margin-bottom:6px}
+.memo .hd b{font-size:22px;letter-spacing:-.02em}
+.memo .hd div{color:var(--ink-2);font-size:13px}
+.memo ul{padding-left:20px;margin:6px 0}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.tag.pe{background:var(--orange);color:#fff}
+.tag.ib{background:var(--ink);color:#fff}
+.tag.me{background:#EADFD6;color:var(--ink-2)}
+details{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:14px 18px;margin-top:14px}
+details summary{cursor:pointer;font-weight:700}
+.agrid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 28px;margin-top:10px}
+@media(max-width:820px){.agrid{grid-template-columns:1fr}.memo{padding:22px 18px}}
+.arow{display:grid;grid-template-columns:1fr 92px auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.arow input{width:92px;border:1px solid var(--line);border-radius:8px;padding:5px 7px;font:600 13px "DM Sans",sans-serif;text-align:right;background:var(--cream)}
+.arow input:focus{outline:2px solid var(--orange-200)}
+.agrp{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:16px 0 2px}
+.foot{padding:40px 0 70px;color:var(--ink-2);font-size:13px}
+.hl-ring{outline:3px solid var(--orange-200);outline-offset:4px;border-radius:var(--radius);transition:outline .3s}
+.spin{display:inline-block;width:10px;height:10px;border:2px solid var(--orange-200);border-top-color:var(--orange);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.float{position:fixed;right:20px;bottom:20px;z-index:60;display:none}
+@media print{header.top,.float,section:not(#s-memo),.foot,details,.noprint{display:none!important}body{background:#fff}.memo{box-shadow:none;border:none;padding:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <div class="mark"><i></i></div>
+      <div><b>Global Support Operating Model</b><small>Executive digital twin · prepared for Multiplier</small></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tcontrols">
+      <button class="btn sm" id="tPrev" title="Previous scene">◀</button>
+      <button class="btn primary sm" id="tPlay">▶ Auto-tour</button>
+      <button class="btn sm" id="tNext" title="Next scene">▶</button>
+    </div>
+  </div>
+  <div class="tourbar"><div class="wrap tour-in">
+    <div class="steps" id="steps"></div>
+    <div class="cap" id="cap"><b>Loading</b>Warming up the simulation…</div>
+    <div class="spacer"></div>
+    <div class="status" id="status"></div>
+  </div></div>
+</header>
+
+<main class="wrap">
+
+<!-- HERO -->
+<section id="s-hero" style="padding-top:34px">
+  <div class="eyebrow">The mandate</div>
+  <h1>A high-trust, metric-driven support machine that protects retention and scales without linear headcount.</h1>
+  <p class="lede" id="heroSentence">Simulating…</p>
+
+  <div class="playhead noprint">
+    <button class="btn sm" id="dPlay">▶ Replay the quarter</button>
+    <span class="dayno" id="dayno">Day 90</span>
+    <input type="range" id="dayslider" min="1" max="90" step="1" value="90" aria-label="Simulation day">
+    <span class="phasetag" id="phasetag">Phase 3 · Retain &amp; expand</span>
+  </div>
+
+  <div class="grid g6" id="kpis"></div>
+  <div class="grid g4" id="kpis2" style="margin-top:16px"></div>
+  <div class="legend" style="margin-top:10px"><span>All figures are modeled, as-of the selected day, for the <b>Phased playbook</b>; chips compare to the <b>Status quo</b>. Nothing on this page is hardcoded.</span></div>
+</section>
+
+<!-- DECOUPLE -->
+<section id="s-decouple">
+  <div class="eyebrow">01 · Scale &amp; automation</div>
+  <h2>Decouple headcount from ticket volume</h2>
+  <p class="lede">Volume keeps climbing. The question is whether people have to climb with it.</p>
+  <div class="grid g2">
+    <div class="card"><h3>Ticket volume vs. people (indexed, day 1 = 100)</h3><p class="sub">7-day average of tickets per day against total support headcount.</p><div id="chDecouple"></div><div class="legend" id="lgDecouple"></div></div>
+    <div class="card" id="cardFrontier"><h3>Cost vs. compliance risk</h3><p class="sub">Each bubble is one operating model. Lower-left is better; bubble size is revenue at risk.</p><div id="chFrontier"></div></div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="s-compare">
+  <div class="eyebrow">02 · Four operating models, same demand</div>
+  <h2>What the simulation says, including where the plan loses</h2>
+  <p class="lede">Every model faces the identical 90 days of demand (same random seeds, three month-end payroll peaks). Outcomes are computed, not asserted.</p>
+  <div class="card"><div id="cmpTable" style="overflow:auto"></div>
+    <div class="insight" id="loses"></div>
+    <details><summary>How each model is defined</summary><div id="modelDefs" style="margin-top:10px;font-size:13.5px;color:var(--ink-2)"></div></details>
+  </div>
+</section>
+
+<!-- RHYTHM -->
+<section id="s-rhythm">
+  <div class="eyebrow">03 · 90-day operating rhythm</div>
+  <h2>On-time, correct resolution, day by day</h2>
+  <p class="lede">Phased rollout with kill criteria. Watch month-end payroll peaks (days 24–30, 54–60, 84–90) and what each model does with them.</p>
+  <div class="card"><div id="chRhythm"></div><div class="legend" id="lgRhythm"></div></div>
+  <div class="grid g3" id="phases" style="margin-top:16px"></div>
+</section>
+
+<!-- FTS -->
+<section id="s-fts">
+  <div class="eyebrow">04 · Follow-the-sun</div>
+  <h2>Where tickets stall, by hour they arrive</h2>
+  <p class="lede">A ticket opened in New York should be worked in Bengaluru and landed before London wakes. Average hours-to-resolve by arrival hour (UTC), with shift windows behind.</p>
+  <div class="grid g2">
+    <div class="card"><div id="chFts"></div><div class="legend"><span><i style="background:var(--c-sq)"></i>Status quo (cold handoffs)</span><span><i style="background:var(--c-pb)"></i>Playbook (summaries + overlap)</span></div></div>
+    <div class="card"><h3>Two-sided queue, one operating rhythm</h3><p class="sub">What changes the shape of that curve:</p>
+      <ul style="color:var(--ink-2);font-size:13.5px;padding-left:18px;margin:6px 0 0">
+        <li><b>AI handoff summaries</b> remove the re-read at each shift change.</li>
+        <li><b>Overlap hours</b> let regions hand over live instead of cold.</li>
+        <li><b>Enterprise priority lane</b> keeps HR/Finance admins ahead without starving employee tickets.</li>
+        <li><b>Specialist capacity</b> is finite and daytime-only, so structured intake decides who waits.</li>
+      </ul>
+      <div class="insight" id="ftsInsight"></div>
+    </div>
+  </div>
+</section>
+
+<!-- HEALTH -->
+<section id="s-health">
+  <div class="eyebrow">05 · Retention &amp; expansion engine</div>
+  <h2>Two-sided account health</h2>
+  <p class="lede">Enterprise admins decide renewals, but employees decide whether admins are happy. Support is the early-warning radar for both.</p>
+  <div class="grid g2">
+    <div class="card"><h3>Status quo · account ARR by health band</h3><p class="sub">Fire &lt;40 · Red 40–55 · Amber 55–70 · Green 70+ (end of quarter)</p><div class="bars" id="barsSq"></div><div id="hSq" style="margin-top:12px"></div></div>
+    <div class="card"><h3>Phased playbook · account ARR by health band</h3><p class="sub">Early-warning scoring, outreach, and expansion routing from day 61.</p><div class="bars" id="barsPb"></div><div id="hPb" style="margin-top:12px"></div></div>
+  </div>
+  <div class="legend"><span><i class="fire" style="height:10px;width:10px;border-radius:3px"></i>Fire</span><span><i class="red" style="height:10px;width:10px;border-radius:3px"></i>Red</span><span><i class="amber" style="height:10px;width:10px;border-radius:3px"></i>Amber</span><span><i class="green" style="height:10px;width:10px;border-radius:3px"></i>Green</span><span>Modeled portfolio of 500 accounts; ARR scale is an editable assumption.</span></div>
+</section>
+
+<!-- CONTROL ROOM -->
+<section id="s-control">
+  <div class="eyebrow">06 · Control room</div>
+  <h2>Drag a dial. Watch the trade-off move.</h2>
+  <p class="lede">Dials tune the <b>Phased playbook</b>. Demand dials (growth, month-end spike, specialist capacity) apply to every model. Everything recomputes in milliseconds.</p>
+  <div class="grid g2">
+    <div class="card"><div id="ctlSliders"></div><button class="btn sm" id="resetBtn">Reset to defaults</button></div>
+    <div class="card"><h3>Design choices</h3><p class="sub">Switch levers off to see what each one is worth.</p><div id="ctlToggles"></div>
+      <div class="insight" id="ctlInsight"></div></div>
+  </div>
+</section>
+
+<!-- BREAK IT -->
+<section id="s-break">
+  <div class="eyebrow">07 · Break it</div>
+  <h2>Stress-test the plan</h2>
+  <p class="lede">A good operating model is judged by how it bends. Inject shocks and see what happens to the playbook, including whether it recovers.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="shock"><input type="checkbox" id="shStat"><div><b>Statutory change</b> in a Tier-3 country<br><small style="color:var(--ink-3)">Regulated demand ×3 for a week; knowledge base goes stale.</small></div><output id="shStatO">day 45</output></div>
+      <input type="range" id="shStatD" min="2" max="80" value="45" style="width:100%;margin:6px 0 10px">
+      <div class="shock"><input type="checkbox" id="shOut"><div><b>Payroll-provider outage</b><br><small style="color:var(--ink-3)">Payroll tickets ×4 for 3 days; specialist capacity halves.</small></div><output id="shOutO">day 25</output></div>
+      <input type="range" id="shOutD" min="2" max="85" value="25" style="width:100%;margin:6px 0 10px">
+      <div class="shock"><input type="checkbox" id="shLat"><div><b>20-country LATAM expansion</b><br><small style="color:var(--ink-3)">+30% volume, more Tier-3 mix, thin knowledge coverage.</small></div><output id="shLatO">day 55</output></div>
+      <input type="range" id="shLatD" min="2" max="80" value="55" style="width:100%;margin:6px 0 6px">
+    </div>
+    <div class="card"><h3>Playbook under stress vs. calm</h3><p class="sub" id="brkSub">Switch on a shock to compare.</p><div id="brkOut"></div></div>
+  </div>
+</section>
+
+<!-- MEMO -->
+<section id="s-memo">
+  <div class="eyebrow">08 · The one-pager</div>
+  <h2>Auto-generated executive memo</h2>
+  <p class="lede">Written from the current simulation state. Change a dial and the memo rewrites itself.</p>
+  <div class="noprint" style="display:flex;gap:10px;margin-bottom:14px"><button class="btn sm" id="copyMemo">Copy text</button><button class="btn sm" id="printMemo">Print / save as PDF</button></div>
+  <div class="memo" id="memo"></div>
+</section>
+
+<!-- ASSUMPTIONS -->
+<section id="s-assume">
+  <div class="eyebrow">Under the hood</div>
+  <h2>Assumptions, with provenance</h2>
+  <p class="lede">Every parameter is editable and tagged by where it comes from. Replace any with your own measured values and the whole model re-runs.</p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" class="noprint">
+    <span class="tag pe">Past Experience</span><span class="tag ib">Industry Benchmark</span><span class="tag me">Modeled Estimate</span>
+    <span class="spacer"></span><button class="btn sm" id="resetA">Reset assumptions</button>
+  </div>
+  <div class="card" style="margin-top:12px"><div id="assume"></div></div>
+
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div><h3>Sensitivity: what does the answer depend on?</h3><p class="sub">Each assumption moved ±25% one at a time, playbook only.</p></div>
+      <div class="noprint" style="display:flex;gap:8px;align-items:center"><select id="sensMetric" class="btn sm"></select><button class="btn primary sm" id="sensRun">Run sensitivity</button></div>
+    </div>
+    <div id="tornado" style="color:var(--ink-2);font-size:13px">Press “Run sensitivity” to compute.</div>
+  </div>
+
+  <details><summary>Method: how the engine works</summary>
+    <div style="margin-top:10px;font-size:13.5px;color:var(--ink-2)">
+      <p><b>One deterministic engine.</b> 2,160 hourly ticks (90 days). Tickets arrive by region and hour, split into topics × country tiers × two personas (enterprise HR/Finance admins and employees). Seeded random numbers; every model sees identical demand. Results are averaged over several seeds with P10–P90 ranges.</p>
+      <p><b>Four coupled feedback loops.</b></p>
+      <ul>
+        <li><b>Deflection ↔ liability.</b> Lower AI confidence gate = more deflection but more wrong answers on regulated topics, which cost reopens, exposure and account health.</li>
+        <li><b>Middleman bottleneck.</b> Payroll/Legal/Compliance are finite, daytime-only pools. Without structured intake, agents burn minutes pinging them and tickets sit in queue.</li>
+        <li><b>Burnout &amp; coaching collapse.</b> Sustained overload raises burnout and attrition, pulls managers from coaching to firefighting, and quality drops weeks later.</li>
+        <li><b>Silent employee churn.</b> Slow or wrong answers to employees depress account health even when the enterprise admin’s tickets meet SLA.</li>
+      </ul>
+      <p><b>Governance in the loop.</b> The playbook’s kill criterion watches rolling audited error and automatically halves AI scope for a week when it trips.</p>
+      <p><b>Limits.</b> This is an illustrative model, not Multiplier data. Use it to compare strategies and see sensitivities, not to forecast exact values.</p>
+    </div>
+  </details>
+</section>
+
+<div class="foot">
+  Prepared by Madhu Poonacha · Illustrative simulation, not Multiplier data · <span id="runInfo"></span><br>
+  Engine: pure JavaScript, runs entirely in your browser, works offline. Palette approximated from Multiplier’s warm-orange brand.
+</div>
+</main>
+
+<button class="btn primary float" id="replayTour">↻ Replay tour</button>
+
+<script>
+// ==ENGINE_START==
+(function(root){
+'use strict';
+const clamp=(x,a,b)=>x<a?a:x>b?b:x;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function gauss(r){let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const DAYS=90,NT=DAYS*24,NACC=500;
+const SPIKE=[.2,.35,.65,1,1,.8,.5];
+const TOPICS=[
+{id:'howto',name:'How-to & documents',share:.34,ent:.15,mins:7,reg:false,ease:.95,spec:.02,harm:.002,cost:150},
+{id:'benefits',name:'Benefits & insurance',share:.12,ent:.10,mins:12,reg:false,ease:.75,spec:.10,harm:.02,cost:1200},
+{id:'payroll',name:'Payroll & tax',share:.20,ent:.35,mins:20,reg:true,ease:.45,spec:.35,harm:.05,cost:2500},
+{id:'visa',name:'Visa & immigration',share:.08,ent:.15,mins:28,reg:true,ease:.35,spec:.55,harm:.08,cost:9000},
+{id:'compliance',name:'Contracts & compliance',share:.14,ent:.55,mins:30,reg:true,ease:.35,spec:.60,harm:.06,cost:18000},
+{id:'billing',name:'Billing & invoices',share:.12,ent:1,mins:18,reg:false,ease:.60,spec:.25,harm:.02,cost:1500}];
+const TIERS=[{share:.40,cx:1,ease:1,spec:.7,exp:1},{share:.35,cx:1.15,ease:.9,spec:1,exp:1.5},{share:.25,cx:1.4,ease:.75,spec:1.5,exp:2.5}];
+const REG=[{start:1,share:.34},{start:9,share:.34},{start:17,share:.32}];
+const HOURSH=(()=>{const a=[];let s=0;for(let h=0;h<24;h++){let v=0;[[3.5,3,.32],[10.5,3,.38],[17,3.5,.30]].forEach(([c,sg,w])=>{for(const k of[-24,0,24]){const x=(h-c+k)/sg;v+=w*Math.exp(-.5*x*x)}});a.push(v);s+=v}return a.map(v=>v/s)})();
+const STRATS=[{id:'sq',name:'Status quo',short:'A'},{id:'co',name:'Cost-out AI',short:'B'},{id:'fo',name:'Specialist fortress',short:'C'},{id:'pb',name:'Phased playbook',short:'D'}];
+
+// key,label,unit,default,min,max,step,tag(pe|ib|me),group,sensitivity?
+const META=[
+['baseVolume','Tickets per weekday at start','/day',1000,400,3000,50,'me','Demand',true],
+['weekendFactor','Weekend volume vs. weekday','×',.38,.1,1,.02,'me','Demand',false],
+['aiReach','AI reach factor (share of each topic the KB can answer)','×',1.15,.6,1.6,.05,'me','Automation & risk',true],
+['aiAccSlope','Accuracy gained per +1.0 of confidence gate','',.35,.1,.8,.05,'me','Automation & risk',true],
+['hardCase','Hard-case concentration after deflection','',.45,0,1,.05,'me','Automation & risk',true],
+['detect','Share of wrong AI answers customers catch (reopen)','',.55,.2,.9,.05,'me','Automation & risk',true],
+['humErrReg','Human error rate on regulated topics without sign-off','',.03,.005,.1,.005,'ib','Automation & risk',true],
+['killThreshold','Rolling audited error that trips the kill switch','',.06,.02,.15,.005,'pe','Automation & risk',false],
+['treeSpecCut','Specialist need removed by decision trees (full rollout)','',.55,.1,.8,.05,'pe','Operations',true],
+['pingMin','Agent “middleman” minutes per specialist ticket (no intake)','min',12,0,40,1,'me','Operations',true],
+['specMin','Specialist minutes per ticket','min',25,10,60,1,'me','Operations',true],
+['occupancy','Agent occupancy (productive share of shift)','',.78,.6,.9,.01,'ib','Operations',true],
+['presentWk','Share of roster working on a weekday','',.72,.55,.9,.01,'ib','Operations',false],
+['hireLag','Hiring lead time','days',45,15,90,5,'ib','Operations',true],
+['rampDays','New-hire ramp','days',45,15,90,5,'ib','Operations',false],
+['targetUtil','Staffing target utilization','',.85,.7,.95,.01,'ib','Operations',false],
+['baseAttr','Baseline annual agent attrition','',.18,.08,.35,.01,'ib','People',true],
+['replaceFrac','Cost to replace a leaver (share of annual cost)','',.35,.1,.8,.05,'ib','People',false],
+['mgrCoachHrs','Manager hours per week available for coaching','h',22,10,34,1,'me','People',false],
+['coachFloorPB','Coaching share protected during firefighting (playbook)','',.35,0,.5,.05,'pe','People',false],
+['agentCost','Blended loaded cost per agent','$/yr',44000,20000,90000,1000,'me','Cost',true],
+['specCost','Loaded cost per specialist','$/yr',72000,40000,150000,1000,'me','Cost',false],
+['mgrCost','Loaded cost per manager','$/yr',60000,30000,150000,1000,'me','Cost',false],
+['aiPerAttempt','AI cost per attempted answer','$',.35,.05,2,.05,'me','Cost',true],
+['aiFixedMonthly','AI platform cost per month','$',18000,0,100000,1000,'me','Cost',false],
+['aiOpsFTE','Dedicated AI-audit & knowledge FTE (playbook)','FTE',5,0,15,1,'pe','Cost',false],
+['arrTotal','Modeled ARR of the account portfolio','$',30000000,5000000,150000000,1000000,'me','Customers',false],
+['pExp','Daily chance an account shows an expansion signal','',.0015,0,.005,.0001,'me','Customers',false],
+['upsell','Expansion value as share of account ARR','',.28,.05,.6,.01,'me','Customers',false],
+['slaEntSimple','SLA: enterprise, standard ticket','h',8,2,24,1,'me','Service levels',false],
+['slaEmpSimple','SLA: employee, standard ticket','h',24,4,72,1,'me','Service levels',false],
+['slaEntSpec','SLA: enterprise, needs specialist','h',24,8,96,1,'me','Service levels',false],
+['slaEmpSpec','SLA: employee, needs specialist','h',48,12,120,1,'me','Service levels',false]];
+const DEF={presentWe:.28,specOcc:.7,reworkMin:15,handoffDelayHrs:3,startUtil:.84,specStartUtil:.88,wrongPen:150};
+META.forEach(m=>DEF[m[0]]=m[3]);
+const DEFC={theta:.88,overlap:2,span:10,gate:true,intake:true,health:true,kill:true,phased:true,levelHiring:true,growthQ:.40,spike:1.9,specCap:1,shocks:{stat:0,outage:0,latam:0}};
+
+const ramp=(d,a,b)=>clamp((d-a)/(b-a),0,1);
+function policy(id,d,C,A){
+ const p={aiScope:0,killScale:1,theta:.88,gate:0,covT:.55,audit:0,intake:.15,tree:.10,summary:0,ov:0,span:15,coachFloor:.05,health:0,seg:false,kbRefresh:30,specMult:1,hire:C.levelHiring?'fc':'re',killOn:false,regSpec:false,aiOps:false};
+ if(id==='sq')return p;
+ if(id==='co'){p.aiScope=ramp(d,1,15);p.theta=.65;p.hire='frozen';return p;}
+ if(id==='fo'){p.intake=.35;p.specMult=1.4;p.regSpec=true;return p;}
+ const ph=C.phased;
+ const r1=ph?ramp(d,1,25):ramp(d,1,12),r2=ph?ramp(d,31,50):ramp(d,1,12),r3=ph?ramp(d,61,75):ramp(d,1,12);
+ const aud=ph?ramp(d,31,55):ramp(d,1,15);
+ const kb=ph?(d<=30?.15*ramp(d,1,30):.15+.18*ramp(d,31,80)):.33*ramp(d,1,40);
+ const st=C.intake?r1:0;
+ p.aiScope=r2;p.theta=C.theta;p.gate=C.gate?1:0;p.covT=.55+kb;p.audit=aud;
+ p.intake=.15+.8*st;p.tree=.10+.8*st;p.summary=st;
+ p.ov=C.overlap*ramp(d,1,10);
+ p.span=15+(C.span-15)*(ph?ramp(d,1,60):ramp(d,1,20));
+ p.coachFloor=A.coachFloorPB;p.health=C.health?r3:0;p.seg=true;
+ p.kbRefresh=aud>.5?12:30;p.hire='fc';p.killOn=C.kill;p.aiOps=true;return p;
+}
+const mkP=()=>({W:0,aiOK:0,aiWD:0,aiWS:0,att:0,aiExp:0,fNS:0,fS:0,ro:0,nsN:0,sN:0,sSp:0,roN:0,okN:0,okS:0,exN:0,exS:0});
+function dayCoef(pol,dn,Q,C,A){
+ const sh=C.shocks||{};
+ const ts=[TIERS[0].share,TIERS[1].share,TIERS[2].share];
+ let latam=1,covPen=0,pm=1,rv3=1,rv2=1,stale=0;
+ if(sh.latam&&dn>=sh.latam){latam=1.3;const t3=ts[2]+.10,k=(1-t3)/(ts[0]+ts[1]);ts[0]*=k;ts[1]*=k;ts[2]=t3;covPen=.12*Math.max(0,1-(dn-sh.latam)/(1.5*pol.kbRefresh));}
+ if(sh.stat&&dn>=sh.stat){const age=dn-sh.stat;if(age<7){rv3=3;rv2=1.8;}stale=.28*Math.max(0,1-age/pol.kbRefresh);}
+ if(sh.outage&&dn>=sh.outage&&dn<sh.outage+3)pm=4;
+ const per=[mkP(),mkP()];
+ const g=clamp(1.2-1.1*(pol.theta-.5),.25,1);
+ const hmQ=1.45-.45*Q;
+ for(let i=0;i<6;i++){const T=TOPICS[i];for(let j=0;j<3;j++){
+  const Tr=TIERS[j];
+  let w=T.share*ts[j];
+  if(T.id==='payroll')w*=pm;
+  if(T.reg){if(j===2)w*=rv3;else if(j===1)w*=rv2;}
+  let f=0,acc=1;
+  const covE=clamp(pol.covT-(j===2?covPen:0),0,1);
+  if(pol.aiScope>0){
+   const blocked=T.reg&&((pol.gate>=1&&j===2)||(pol.gate>=2&&j>=1));
+   if(!blocked){
+    const e=clamp(T.ease*Tr.ease*covE*A.aiReach,0,1);
+    f=clamp(e*g,0,1)*pol.aiScope*pol.killScale;
+    const stl=T.reg?(j===2?stale:(j===1?.6*stale:0)):0;
+    acc=clamp(.52+.30*T.ease*Tr.ease+.14*covE+.08*pol.audit+A.aiAccSlope*(pol.theta-.5)-stl,.30,.985);
+   }
+  }
+  const hard=1+A.hardCase*f;
+  let s=T.spec*Tr.spec*(1+.35*f);
+  s=s*(1-A.treeSpecCut*pol.tree);
+  if(pol.regSpec&&T.reg)s=.95;
+  s=clamp(s,0,.95);
+  const mBase=T.mins*Tr.cx*hard*hmQ;
+  const mN=mBase,mS=mBase+A.pingMin*(1-.7*pol.intake);
+  const sMin=A.specMin*Tr.cx*(1-.25*pol.intake);
+  const hwN=(T.reg?A.humErrReg:A.humErrReg*.27)*(1+3*(1-Q))*(1-.5*pol.tree);
+  const hwS=.006;
+  const ex=T.harm*T.cost*Tr.exp;
+  for(let p=0;p<2;p++){
+   const pw=p===0?T.ent:1-T.ent;const wp=w*pw;if(wp<=0)continue;
+   const P=per[p];const wr=f*(1-acc);const hv=1-f;
+   P.W+=wp;P.aiOK+=wp*f*acc;P.aiWD+=wp*wr*A.detect;P.aiWS+=wp*wr*(1-A.detect);P.att+=wp*f;
+   P.aiExp+=wp*wr*((1-A.detect)+A.detect*.25)*ex;
+   P.fNS+=wp*hv*(1-s);P.fS+=wp*hv*s;P.ro+=wp*wr*A.detect;
+   P.nsN+=wp*hv*(1-s)*mN;P.sN+=wp*hv*s*mS;P.sSp+=wp*hv*s*sMin;P.roN+=wp*wr*A.detect*mN*1.2;
+   P.okN+=wp*hv*(1-s)*(1-hwN);P.okS+=wp*hv*s*(1-hwS);P.exN+=wp*hv*(1-s)*hwN*ex;P.exS+=wp*hv*s*hwS*ex;
+  }
+ }}
+ const tot=per[0].W+per[1].W;
+ for(let p=0;p<2;p++){const P=per[p];const W=P.W||1e-12;const a=P.fNS,b=P.fS,c=P.ro;
+  P.share=P.W/tot;
+  P.mN=a>1e-12?P.nsN/a:0;P.mS=b>1e-12?P.sN/b:0;P.sMin=b>1e-12?P.sSp/b:0;P.mRo=c>1e-12?P.roN/c:0;
+  P.okN=a>1e-12?P.okN/a:1;P.okS=b>1e-12?P.okS/b:1;P.exN=a>1e-12?P.exN/a:0;P.exS=b>1e-12?P.exS/b:0;
+  P.aiOK/=W;P.aiWD/=W;P.aiWS/=W;P.att/=W;P.aiExp/=W;P.fNS/=W;P.fS/=W;P.ro/=W;}
+ return{per,vol:tot*latam};
+}
+function calibrate(A){
+ const C=JSON.parse(JSON.stringify(DEFC));
+ const co=dayCoef(policy('sq',1,C,A),1,.95,C,A);
+ let ag=0,sp=0;
+ for(let p=0;p<2;p++){const P=co.per[p];ag+=P.share*A.baseVolume*(P.fNS*P.mN+P.fS*P.mS+P.ro*P.mRo);sp+=P.share*A.baseVolume*P.fS*P.sMin;}
+ const avgFac=(5+2*A.weekendFactor)/7;
+ const pAvg=(5*A.presentWk+2*A.presentWe)/7;
+ const capFTE=pAvg*8*60*A.occupancy;
+ const spCapFTE=pAvg*8*60*A.specOcc;
+ return{H0:Math.ceil(ag*avgFac/(capFTE*A.startUtil)),S0:Math.ceil(sp*avgFac/(spCapFTE*A.specStartUtil)),load0:ag*avgFac};
+}
+const worldCache=new Map();
+function getWorld(seed){
+ if(worldCache.has(seed))return worldCache.get(seed);
+ const r=mulberry32(seed*1013+7);
+ const dayNoise=new Float64Array(DAYS),hourNoise=new Float64Array(NT),killNoise=new Float64Array(DAYS);
+ for(let d=0;d<DAYS;d++)dayNoise[d]=Math.exp(.05*gauss(r));
+ for(let t=0;t<NT;t++)hourNoise[t]=Math.exp(.10*gauss(r));
+ for(let d=0;d<DAYS;d++)killNoise[d]=.012*gauss(r);
+ const ra=mulberry32(seed*7777+13);
+ const raw=[];for(let i=0;i<NACC;i++)raw.push({a:Math.exp(1.0*gauss(ra)),h:clamp(74+10*gauss(ra),35,95),he:clamp(74+10*gauss(ra),35,95),t3:clamp(.18+.12*gauss(ra),.02,.6)});
+ raw.sort((x,y)=>y.a-x.a);
+ const arr=new Float64Array(NACC),h0a=new Float64Array(NACC),h0e=new Float64Array(NACC),t3=new Float64Array(NACC);let sum=0;
+ raw.forEach((o,i)=>{arr[i]=o.a;sum+=o.a;h0a[i]=o.h;h0e[i]=o.he;t3[i]=o.t3;});
+ const uExp=new Float64Array(NACC*DAYS),nA=new Float64Array(NACC*DAYS),nE=new Float64Array(NACC*DAYS);
+ for(let k=0;k<NACC*DAYS;k++){uExp[k]=ra();nA[k]=gauss(ra);nE[k]=gauss(ra);}
+ const w={dayNoise,hourNoise,killNoise,arr,arrRaw:sum,h0a,h0e,t3,uExp,nA,nE};worldCache.set(seed,w);return w;
+}
+const AKEYS=['tick','aiOK','otc','satS','satN','expo','esc','cost','att','wrong','arrRisk','H','Q','B','util','backlog','waitS','waitN','coach','leavers','sig','pipe','err','specWS','specWN'];
+function simulate(id,world,C,A,cal){
+ const H0=cal.H0,S0=cal.S0;
+ let Q=.95,B=.05,killUntil=-1,killScale=1;
+ let Hprod=H0;const ramp_=[],pend=[];
+ let loadEMA=cal.load0;
+ const qA=[[],[]],hA=[0,0],qS=[[],[]],hS=[0,0];
+ const scale=A.arrTotal/world.arrRaw;
+ const ARR=new Float64Array(NACC);for(let i=0;i<NACC;i++)ARR[i]=world.arr[i]*scale;
+ const hAd=Float64Array.from(world.h0a),hEm=Float64Array.from(world.h0e);
+ const out={};AKEYS.forEach(k=>out[k]=new Float64Array(DAYS));
+ const events=[];const whS=new Float64Array(24),whN=new Float64Array(24);
+ const roll=[];let prevSE=.85,prevSM=.85;const pAvg=(5*A.presentWk+2*A.presentWe)/7;
+ const risk=()=>{let s=0;for(let i=0;i<NACC;i++){const c=.55*hAd[i]+.45*hEm[i];s+=ARR[i]*(.04+.5/(1+Math.exp((c-55)/7)));}return s;};
+ const arr0=risk();
+ let tLeav=0,tHall=0;
+ for(let d=0;d<DAYS;d++){
+  const dn=d+1;
+  if(dn>killUntil)killScale=1;
+  const pol=policy(id,dn,C,A);pol.killScale=killScale;
+  const co=dayCoef(pol,dn,Q,C,A);
+  const wk=(d%7)<5,dom=(d%30)+1,sp=dom>=24?SPIKE[dom-24]:0;
+  const growth=Math.pow(1+C.growthQ,dn/90);
+  const Vday=A.baseVolume*(wk?1:A.weekendFactor)*growth*(1+(C.spike-1)*sp)*world.dayNoise[d]*co.vol;
+  let rampTot=0;for(const r of ramp_)rampTot+=r.n;
+  const Hall=Hprod+rampTot,Heff=Hprod+A.rampProd*rampTot;
+  const sh=C.shocks;
+  const outage=sh.outage&&dn>=sh.outage&&dn<sh.outage+3;
+  const specFTE=S0*C.specCap*pol.specMult*(1+.5*(growth-1));
+  const present=wk?A.presentWk:A.presentWe;
+  const coldF=(1-.85*pol.summary)*(1-Math.min(1,pol.ov/3)*.6);
+  const dropDelay=A.handoffDelayHrs*coldF;
+  const len=8+pol.ov;
+  let capDay=0,usedDay=0,arrMin=0,dTick=0,dAIok=0,dOtc=0,dAIwrong=0,dAtt=0,dExpo=0,dEsc=0,dWS=0,dWN=0,dSW=0,dSWN=0;
+  const dSS=[0,0],dSN=[0,0];
+  const complete=(c,n,t,isSpec)=>{
+   if(c.ro)return;
+   const wt=(t-c.t0)+.5,we=wt+c.wa+(wt/8)*dropDelay;
+   if(we<=c.tgt)dOtc+=n*c.ok;
+   const r=we/c.tgt,tf=r<=.5?1:1-.5*Math.min(1,(r-.5)/2);
+   dSS[c.p]+=n*(c.ok*.93+(1-c.ok)*.35)*tf;dSN[c.p]+=n;
+   dExpo+=n*c.ex;
+   if(c.p===0){if(we>2*c.tgt)dEsc+=n*.04;dEsc+=n*(1-c.ok)*.06;}
+   dWS+=n*we;dWN+=n;whS[c.hr]+=n*we;whN[c.hr]+=n;
+   if(isSpec){dSW+=n*(t-c.tq+.5);dSWN+=n;}
+  };
+  for(let h=0;h<24;h++){
+   const t=d*24+h;
+   const D=Vday*HOURSH[h]*world.hourNoise[t];
+   let capA=0;
+   for(let r=0;r<3;r++){if(((h-REG[r].start+24)%24)<len)capA+=Heff*REG[r].share*present*8/len;}
+   capA*=60*A.occupancy;
+   if(h===1||h===9||h===17){let wip=0;for(let q=0;q<2;q++)for(let k=hA[q];k<qA[q].length;k++)wip+=qA[q][k].n;capA=Math.max(0,capA-wip*.5*A.reworkMin*coldF);}
+   const capS=(h>=2&&h<20)?specFTE*present*8*60*A.specOcc/18*(outage?.5:1):0;
+   capDay+=capA;
+   for(let p=0;p<2;p++){
+    const P=co.per[p];const Np=D*P.share;if(Np<=0)continue;
+    dTick+=Np;const aiW=P.aiWD+P.aiWS;
+    dAIok+=Np*P.aiOK;dOtc+=Np*P.aiOK;dAIwrong+=Np*aiW;dAtt+=Np*P.att;dExpo+=Np*P.aiExp;
+    dSS[p]+=Np*(P.aiOK*.90+aiW*.35);dSN[p]+=Np*(P.aiOK+aiW);
+    if(p===0)dEsc+=Np*aiW*.06;
+    const mk=(n,am,x)=>{if(n<1e-7)return;x.t0=t;x.hr=h;x.p=p;x.n=n;x.am=am;qA[p].push(x);arrMin+=am;};
+    mk(Np*P.fNS,Np*P.fNS*P.mN,{spec:false,ro:false,wa:0,tgt:p===0?A.slaEntSimple:A.slaEmpSimple,ok:P.okN,ex:P.exN});
+    mk(Np*P.fS,Np*P.fS*P.mS,{spec:true,ro:false,wa:0,tgt:p===0?A.slaEntSpec:A.slaEmpSpec,ok:P.okS,ex:P.exS,sPer:P.sMin});
+    mk(Np*P.ro,Np*P.ro*P.mRo,{spec:false,ro:true,wa:24,tgt:1e9,ok:1,ex:0});
+   }
+   const pick=(Q0,H0_)=>{const a=Q0[0][H0_[0]],b=Q0[1][H0_[1]];if(!a&&!b)return-1;if(!b)return 0;if(!a)return 1;return pol.seg?(a.t0<=b.t0+6?0:1):(a.t0<=b.t0?0:1);};
+   let cap=capA;
+   while(cap>1e-6){
+    const q=pick(qA,hA);if(q<0)break;
+    const c=qA[q][hA[q]];let m=Math.min(cap,c.am),n=c.am>0?c.n*(m/c.am):c.n,done=false;
+    if(m>=c.am-1e-9){m=c.am;n=c.n;done=true;}
+    c.n-=n;c.am-=m;cap-=m;usedDay+=m;
+    if(c.spec)qS[q].push({t0:c.t0,hr:c.hr,p:q,n:n,sm:n*c.sPer,tgt:c.tgt,ok:c.ok,ex:c.ex,sPer:c.sPer,wa:0,tq:t});
+    else complete(c,n,t,false);
+    if(done){hA[q]++;if(hA[q]>1500){qA[q].splice(0,hA[q]);hA[q]=0;}}
+   }
+   let cs=capS;
+   while(cs>1e-6){
+    const q=pick(qS,hS);if(q<0)break;
+    const c=qS[q][hS[q]];let m=Math.min(cs,c.sm),n=c.sm>0?c.n*(m/c.sm):c.n,done=false;
+    if(m>=c.sm-1e-9){m=c.sm;n=c.n;done=true;}
+    c.n-=n;c.sm-=m;cs-=m;
+    complete(c,n,t,true);
+    if(done){hS[q]++;if(hS[q]>1500){qS[q].splice(0,hS[q]);hS[q]=0;}}
+   }
+  }
+  // end of day
+  let bTick=0,bMin=0;for(let q=0;q<2;q++){for(let k=hA[q];k<qA[q].length;k++){bTick+=qA[q][k].n;bMin+=qA[q][k].am;}for(let k=hS[q];k<qS[q].length;k++)bTick+=qS[q][k].n;}
+  const capRef=Math.max(1,Heff*pAvg*8*60*A.occupancy);
+  const backlogDays=bMin/capRef;
+  const util=usedDay/Math.max(1,capDay);
+  const stress=clamp((util-.85)/.15,0,1);
+  B=B+.04*stress*(1-B)-.012*(1-stress)*B;
+  const coachFrac=Math.max(pol.coachFloor,Math.min(.5,.5-.6*Math.max(0,backlogDays-.3)));
+  const coachHrs=A.mgrCoachHrs*coachFrac/pol.span;
+  const Qt=.70+.30*clamp(coachHrs/1.2,0,1);
+  Q+=(Qt-Q)*.05;
+  const hazard=A.baseAttr*(1+3.5*B*B);
+  const leavers=Hall*hazard/365;Hprod=Math.max(10,Hprod-leavers);tLeav+=leavers;tHall+=Hall;
+  loadEMA+=(arrMin-loadEMA)/20;
+  if(pol.hire!=='frozen'){
+   const capFTE=pAvg*8*60*A.occupancy;
+   const leadG=pol.hire==='fc'?Math.pow(1+C.growthQ,(A.hireLag+A.rampDays*.5)/90):1;
+   const desired=loadEMA*leadG/(capFTE*A.targetUtil);
+   let pt=0;for(const x of pend)pt+=x.n;
+   let rt=0;for(const x of ramp_)rt+=x.n;
+   const gap=desired-(Hprod+rt+pt);
+   if(gap>.5)pend.push({day:dn+A.hireLag,n:gap*.25});
+  }
+  for(let k=pend.length-1;k>=0;k--)if(pend[k].day<=dn){ramp_.push({start:dn,n:pend[k].n});pend.splice(k,1);}
+  for(let k=ramp_.length-1;k>=0;k--)if(dn-ramp_[k].start>=A.rampDays){Hprod+=ramp_[k].n;ramp_.splice(k,1);}
+  // kill criterion
+  const wrongRate=dAtt>20?dAIwrong/dAtt:0;
+  roll.push(wrongRate+world.killNoise[d]);if(roll.length>7)roll.shift();
+  const ravg=roll.reduce((a,b)=>a+b,0)/roll.length;
+  if(pol.killOn&&dn>killUntil&&pol.aiScope>.3&&ravg>A.killThreshold){killUntil=dn+7;killScale=.5;events.push({day:dn,type:'kill',text:'Kill criterion tripped: audited AI error '+(ravg*100).toFixed(1)+'%, AI scope halved for 7 days'});}
+  // accounts
+  const sE=dSN[0]>3?dSS[0]/dSN[0]:prevSE,sM=dSN[1]>3?dSS[1]/dSN[1]:prevSM;prevSE=sE;prevSM=sM;
+  const wrongEnt=co.per[0].aiWD+co.per[0].aiWS;
+  const thr=pol.health>0?62:42,cap2=pol.health>0?8:3,boost=pol.health>0?.6*pol.health:.25;
+  const expRoute=pol.health>0?.25+.6*pol.health:.25;
+  let cnt=0,dSig=0,dPipe=0,riskSum=0;
+  for(let i=0;i<NACC;i++){
+   const idx=i*DAYS+d;
+   const tA=world.h0a[i]+120*(sE-.84)-A.wrongPen*wrongEnt*(.4+world.t3[i]);
+   const tE=world.h0e[i]+120*(sM-.84);
+   hAd[i]=clamp(hAd[i]+.05*(tA-hAd[i])+.5*world.nA[idx],0,100);
+   hEm[i]=clamp(hEm[i]+.05*(tE-hEm[i])+.5*world.nE[idx],0,100);
+   let c=.55*hAd[i]+.45*hEm[i];
+   if(c<thr&&cnt<cap2){hAd[i]=Math.min(100,hAd[i]+boost);hEm[i]=Math.min(100,hEm[i]+boost);cnt++;c=.55*hAd[i]+.45*hEm[i];}
+   if(world.uExp[idx]<A.pExp&&c>55){dSig++;dPipe+=ARR[i]*A.upsell*expRoute;}
+   riskSum+=ARR[i]*(.04+.5/(1+Math.exp((c-55)/7)));
+  }
+  // cost
+  const cost=(Hall*A.agentCost+specFTE*A.specCost+(Hall/pol.span)*A.mgrCost+(pol.aiOps?A.aiOpsFTE*A.agentCost*1.4:0))/365+dAtt*A.aiPerAttempt*0+0+(pol.aiScope>0?A.aiFixedMonthly/30:0)+leavers*A.replaceFrac*A.agentCost;
+  let attemptsN=dAtt*0;
+  // attempts counted from persona fractions
+  attemptsN=dTick*0;
+  let attAbs=0;for(let p=0;p<2;p++)attAbs+=dTick*co.per[p].share*co.per[p].att;
+  const costFull=cost+attAbs*A.aiPerAttempt;
+  const o=out;
+  o.tick[d]=dTick;o.aiOK[d]=dAIok;o.otc[d]=dOtc;o.satS[d]=dSS[0]+dSS[1];o.satN[d]=dSN[0]+dSN[1];o.expo[d]=dExpo;o.esc[d]=dEsc;o.cost[d]=costFull;o.att[d]=attAbs;o.wrong[d]=dAIwrong;
+  o.arrRisk[d]=riskSum;o.H[d]=Hall;o.Q[d]=Q;o.B[d]=B;o.util[d]=util;o.backlog[d]=bTick;o.waitS[d]=dWS;o.waitN[d]=dWN;o.coach[d]=coachFrac;o.leavers[d]=leavers;o.sig[d]=dSig;o.pipe[d]=dPipe;o.err[d]=ravg;o.specWS[d]=dSW;o.specWN[d]=dSWN;
+ }
+ // unfinished work counts against the quarter
+ let rem=0,remEnt=0;for(let q=0;q<2;q++){for(let k=hA[q];k<qA[q].length;k++){const c=qA[q][k];if(!c.ro){rem+=c.n;if(q===0)remEnt+=c.n;}}for(let k=hS[q];k<qS[q].length;k++){const c=qS[q][k];rem+=c.n;if(q===0)remEnt+=c.n;}}
+ out.satS[DAYS-1]+=rem*.4;out.satN[DAYS-1]+=rem;out.esc[DAYS-1]+=remEnt*.04;
+ const bands=(arrH)=>{const b=[0,0,0,0];for(let i=0;i<NACC;i++){const c=arrH(i);b[c<40?0:c<55?1:c<70?2:3]+=ARR[i];}return b;};
+ const sum=a=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i];return s;};
+ const tickets=sum(out.tick);
+ const sc={
+  tickets,cost:sum(out.cost),cpt:sum(out.cost)/tickets,otc:100*sum(out.otc)/tickets,ai:100*sum(out.aiOK)/tickets,
+  csat:100*sum(out.satS)/sum(out.satN),expo:sum(out.expo),esc:sum(out.esc),arr:out.arrRisk[DAYS-1],arr0,
+  pipe:sum(out.pipe),sig:sum(out.sig),attr:100*(tLeav/(tHall/DAYS))*(365/DAYS),coach:100*sum(out.coach)/DAYS,
+  fte:out.H[DAYS-1],fte0:H0,wait:sum(out.waitS)/Math.max(1,sum(out.waitN)),specWait:sum(out.specWS)/Math.max(1,sum(out.specWN)),
+  kills:events.filter(e=>e.type==='kill').length,S0
+ };
+ const wbh=[];for(let h=0;h<24;h++)wbh.push(whN[h]>0?whS[h]/whN[h]:0);
+ return{daily:out,sc,events,wbh,bands:{adm:bands(i=>hAd[i]),emp:bands(i=>hEm[i]),comp:bands(i=>.55*hAd[i]+.45*hEm[i])}};
+}
+function aggregate(runs){
+ const n=runs.length,d={},cum={};
+ AKEYS.forEach(k=>{const a=new Float64Array(DAYS);for(const r of runs)for(let i=0;i<DAYS;i++)a[i]+=r.daily[k][i]/n;d[k]=a;});
+ ['tick','aiOK','otc','satS','satN','expo','esc','cost','pipe','sig','leavers'].forEach(k=>{const a=new Float64Array(DAYS);let s=0;for(let i=0;i<DAYS;i++){s+=d[k][i];a[i]=s;}cum[k]=a;});
+ const sc={},p10={},p90={};
+ Object.keys(runs[0].sc).forEach(k=>{const v=runs.map(r=>r.sc[k]).sort((a,b)=>a-b);sc[k]=v.reduce((a,b)=>a+b,0)/n;p10[k]=v[Math.round(.1*(n-1))];p90[k]=v[Math.round(.9*(n-1))];});
+ const wbh=new Array(24).fill(0);for(const r of runs)for(let h=0;h<24;h++)wbh[h]+=r.wbh[h]/n;
+ const bands={};['adm','emp','comp'].forEach(k=>{const b=[0,0,0,0];for(const r of runs)for(let i=0;i<4;i++)b[i]+=r.bands[k][i]/n;bands[k]=b;});
+ return{daily:d,cum,sc,p10,p90,wbh,bands,events:runs[0].events,n};
+}
+function mergeA(over){return Object.assign({},DEF,over||{});}
+function runOne(id,C,A,nSeeds){const cal=calibrate(A);const runs=[];for(let s=1;s<=nSeeds;s++)runs.push(simulate(id,getWorld(s),C,A,cal));return aggregate(runs);}
+function runAll(C,A,nSeeds){const cal=calibrate(A);const res={};for(const st of STRATS){const runs=[];for(let s=1;s<=nSeeds;s++)runs.push(simulate(st.id,getWorld(s),C,A,cal));res[st.id]=aggregate(runs);}return{cal,res};}
+function sensitivity(metric,C,A,pct,nSeeds){
+ const base=runOne('pb',C,A,nSeeds).sc[metric];const rows=[];
+ META.forEach(m=>{if(!m[9])return;const k=m[0];const lo=clamp(A[k]*(1-pct),m[4],m[5]),hi=clamp(A[k]*(1+pct),m[4],m[5]);
+  const vl=runOne('pb',C,Object.assign({},A,{[k]:lo}),nSeeds).sc[metric],vh=runOne('pb',C,Object.assign({},A,{[k]:hi}),nSeeds).sc[metric];
+  rows.push({key:k,label:m[1],lo:vl-base,hi:vh-base,range:Math.abs(vh-vl)});});
+ rows.sort((a,b)=>b.range-a.range);return{base,rows};
+}
+root.Engine={DAYS,TOPICS,TIERS,STRATS,META,DEF,DEFC,calibrate,runAll,runOne,sensitivity,mergeA,policy};
+})(typeof window!=='undefined'?window:globalThis);
+// ==ENGINE_END==
+</script>
+<script>
+// ===================== UI =====================
+(function(){
+'use strict';
+const E=window.Engine,$=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
+const COL={sq:'#8C7B70',co:'#EFA100',fo:'#B04A5A',pb:'#FF5A1F'};
+const NAME={sq:'A · Status quo',co:'B · Cost-out AI',fo:'C · Specialist fortress',pb:'D · Phased playbook'};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const S={C:clone(E.DEFC),A:clone(E.DEF),day:90,R:null,calm:null,hl:-1,hour:-1,draw:false,seeds:8,tour:{playing:false,idx:0,token:0}};
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fmt={
+ usd1:v=>'$'+v.toFixed(1),m2:v=>'$'+(v/1e6).toFixed(2)+'M',m1:v=>'$'+(v/1e6).toFixed(1)+'M',
+ pct1:v=>v.toFixed(1)+'%',int:v=>Math.round(v).toLocaleString('en-US'),k:v=>'$'+Math.round(v/1e3)+'K'
+};
+const cumv=(r,k,d)=>r.cum[k][d-1];
+
+// ---------- KPI definitions ----------
+const KPI=[
+ {k:'cpt',lab:'Cost per ticket',f:fmt.usd1,low:true,get:(r,d)=>cumv(r,'cost',d)/Math.max(1,cumv(r,'tick',d)),unit:'rel'},
+ {k:'otc',lab:'On-time, correct resolution',f:fmt.pct1,low:false,get:(r,d)=>100*cumv(r,'otc',d)/Math.max(1,cumv(r,'tick',d)),unit:'pts'},
+ {k:'ai',lab:'Resolved without a human',f:fmt.pct1,low:false,get:(r,d)=>100*cumv(r,'aiOK',d)/Math.max(1,cumv(r,'tick',d)),unit:'pts'},
+ {k:'arr',lab:'Revenue at risk (modeled)',f:fmt.m2,low:true,get:(r,d)=>r.daily.arrRisk[d-1],unit:'rel'},
+ {k:'exp',lab:'Compliance exposure (modeled)',f:fmt.m2,low:true,get:(r,d)=>cumv(r,'expo',d),unit:'rel'},
+ {k:'esc',lab:'Executive escalations',f:fmt.int,low:true,get:(r,d)=>cumv(r,'esc',d),unit:'rel'}
+];
+const KPI2=[
+ {k:'csat',lab:'CSAT (modeled)',f:v=>v.toFixed(1),low:false,get:(r,d)=>100*cumv(r,'satS',d)/Math.max(1,cumv(r,'satN',d)),unit:'pts'},
+ {k:'fte',lab:'Support headcount',f:fmt.int,low:true,get:(r,d)=>r.daily.H[d-1],unit:'rel'},
+ {k:'attr',lab:'Agent attrition (annualized)',f:fmt.pct1,low:true,get:(r,d)=>r.sc.attr,unit:'pts'},
+ {k:'pipe',lab:'Expansion pipeline surfaced',f:fmt.m2,low:false,get:(r,d)=>cumv(r,'pipe',d),unit:'rel'}
+];
+function chipFor(def,a,b){
+ if(!isFinite(a)||!isFinite(b))return '';
+ let txt,diff=a-b;
+ if(def.unit==='pts')txt=(diff>=0?'+':'−')+Math.abs(diff).toFixed(1)+' pts';
+ else{if(Math.abs(b)<1e-9)return '';const p=100*diff/b;txt=(p>=0?'▲ ':'▼ ')+Math.abs(p).toFixed(0)+'%';}
+ const good=def.low?diff<0:diff>0;const flat=Math.abs(diff)<(def.unit==='pts'?.15:Math.abs(b)*.01);
+ return `<span class="chip ${flat?'flat':good?'good':'bad'}">${txt}</span>`;
+}
+const shown={};
+function tile(def,sec){
+ const pb=def.get(S.R.res.pb,S.day),sq=def.get(S.R.res.sq,S.day);
+ return `<div class="card kpi${sec?' sec':''}" data-k="${def.k}"><div class="lab">${def.lab}</div><div class="val" data-v="${pb}">${def.f(pb)}</div><div class="cmp">${chipFor(def,pb,sq)}<span>vs status quo ${def.f(sq)}</span></div></div>`;
+}
+function renderKPIs(){
+ $('#kpis').innerHTML=KPI.map(d=>tile(d,false)).join('');
+ $('#kpis2').innerHTML=KPI2.map(d=>tile(d,true)).join('');
+}
+function tweenKPIs(ms){
+ if(reduced){renderKPIs();return Promise.resolve();}
+ const defs=KPI.concat(KPI2);
+ return new Promise(res=>{const t0=performance.now();
+  const step=now=>{const p=Math.min(1,(now-t0)/ms),e=1-Math.pow(1-p,3);
+   defs.forEach(def=>{const el=document.querySelector(`.kpi[data-k="${def.k}"] .val`);if(el){const v=parseFloat(el.dataset.v);el.textContent=def.f(v*e);}});
+   if(p<1)requestAnimationFrame(step);else res();};requestAnimationFrame(step);});
+}
+function phaseOf(d){return d<=30?['Phase 1 · Stabilize',1]:d<=60?['Phase 2 · Deflect safely',2]:['Phase 3 · Retain & expand',3];}
+function renderDay(){
+ $('#dayno').textContent='Day '+S.day;$('#dayslider').value=S.day;$('#phasetag').textContent=phaseOf(S.day)[0];
+ renderKPIs();renderRhythm();renderPhases();
+}
+
+// ---------- chart helpers ----------
+function ma(a,w){const o=new Array(a.length);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=w)s-=a[i-w];o[i]=s/Math.min(i+1,w);}return o;}
+function niceTicks(lo,hi,n){const span=hi-lo||1,raw=span/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,nf=f<1.5?1:f<3?2:f<7?5:10,st=nf*mag;const t=[];for(let v=Math.ceil(lo/st)*st;v<=hi+st*.001;v+=st)t.push(+v.toFixed(10));return t;}
+function lineChart(o){
+ const W=640,H=o.h||280,pl=48,pr=16,pt=14,pb=30;
+ const x=v=>pl+(v-o.x0)/(o.x1-o.x0)*(W-pl-pr),y=v=>H-pb-(v-o.y0)/(o.y1-o.y0)*(H-pt-pb);
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${o.label||'chart'}" class="${S.draw?'draw':''}">`;
+ (o.bands||[]).forEach(b=>{s+=`<rect x="${x(b[0])}" y="${pt}" width="${x(b[1])-x(b[0])}" height="${H-pt-pb}" fill="${b[2]}"/>`;if(b[3])s+=`<text x="${(x(b[0])+x(b[1]))/2}" y="${pt+12}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#A39388">${b[3]}</text>`;});
+ niceTicks(o.y0,o.y1,5).forEach(v=>{s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#F1DFD2"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#A39388">${o.yf?o.yf(v):v}</text>`;});
+ niceTicks(o.x0,o.x1,6).forEach(v=>{s+=`<text x="${x(v)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#A39388">${o.xf?o.xf(v):v}</text>`;});
+ (o.vlines||[]).forEach(v=>{s+=`<line x1="${x(v.x)}" x2="${x(v.x)}" y1="${pt}" y2="${H-pb}" stroke="${v.c}" stroke-dasharray="4 4"/><text x="${x(v.x)+4}" y="${pt+(v.dy||24)}" font-size="10.5" font-weight="700" fill="${v.c}">${v.t}</text>`;});
+ o.series.forEach(se=>{let d='';se.data.forEach((val,i)=>{d+=(i?'L':'M')+x(i+1).toFixed(1)+' '+y(clamp(val,o.y0,o.y1)).toFixed(1);});s+=`<path class="ln" pathLength="1" d="${d}" fill="none" stroke="${se.c}" stroke-width="${se.w||2.5}" stroke-linejoin="round" stroke-linecap="round" ${se.dash?`stroke-dasharray="${se.dash}"`:''} opacity="${se.o||1}"/>`;});
+ (o.marks||[]).forEach(m=>{s+=`<path d="M${x(m.x)} ${y(m.y)-7}l6 7-6 7-6-7z" fill="${m.c}" stroke="#fff" stroke-width="1.5"><title>${m.t}</title></path>`;});
+ if(o.play)s+=`<line x1="${x(o.play)}" x2="${x(o.play)}" y1="${pt}" y2="${H-pb}" stroke="#2B1B14" stroke-width="1.5"/><circle cx="${x(o.play)}" cy="${pt}" r="4" fill="#2B1B14"/>`;
+ return s+'</svg>';
+}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+
+// ---------- charts ----------
+function renderDecouple(){
+ const r=S.R.res,tk=ma(Array.from(r.pb.daily.tick),7),b=tk[6];
+ const idxT=tk.map(v=>100*v/b),idxS=Array.from(r.sq.daily.H).map(v=>100*v/r.sq.daily.H[0]),idxP=Array.from(r.pb.daily.H).map(v=>100*v/r.pb.daily.H[0]);
+ const hi=Math.max(...idxT,...idxS,...idxP)*1.08;
+ $('#chDecouple').innerHTML=lineChart({x0:1,x1:90,y0:80,y1:Math.max(150,hi),yf:v=>v,series:[{data:idxT,c:'#2B1B14',dash:'2 5',w:2},{data:idxS,c:COL.sq,w:2.5},{data:idxP,c:COL.pb,w:3.5}],play:S.day,label:'Volume vs headcount'});
+ $('#lgDecouple').innerHTML=`<span><i style="background:#2B1B14"></i>Ticket volume</span><span><i style="background:${COL.sq}"></i>Headcount · status quo</span><span><i style="background:${COL.pb}"></i>Headcount · playbook</span>`;
+}
+function renderFrontier(){
+ const r=S.R.res,W=640,H=300,pl=56,pr=24,pt=18,pb=38,ids=['sq','co','fo','pb'];
+ const xs=ids.map(i=>r[i].sc.cpt),ys=ids.map(i=>r[i].sc.expo/1e6),rs=ids.map(i=>r[i].sc.arr);
+ const x0=Math.min(...xs)*.9,x1=Math.max(...xs)*1.08,y0=0,y1=Math.max(...ys)*1.2||1;
+ const X=v=>pl+(v-x0)/(x1-x0)*(W-pl-pr),Y=v=>H-pb-(v-y0)/(y1-y0)*(H-pt-pb),rmax=Math.max(...rs);
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cost versus risk">`;
+ niceTicks(y0,y1,4).forEach(v=>{s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#F1DFD2"/><text x="${pl-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#A39388">$${v.toFixed(v<10?1:0)}M</text>`;});
+ niceTicks(x0,x1,5).forEach(v=>{s+=`<text x="${X(v)}" y="${H-18}" text-anchor="middle" font-size="11" fill="#A39388">$${v.toFixed(0)}</text>`;});
+ s+=`<text x="${(pl+W-pr)/2}" y="${H-3}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#6E5C52">Cost per ticket →</text><text transform="translate(13 ${(pt+H-pb)/2}) rotate(-90)" text-anchor="middle" font-size="11.5" font-weight="600" fill="#6E5C52">Compliance exposure →</text>`;
+ ids.forEach((id,i)=>{const rad=14+26*Math.sqrt(rs[i]/rmax),act=S.hl<0||S.hl===i;
+  s+=`<circle cx="${X(xs[i])}" cy="${Y(ys[i])}" r="${rad}" fill="${COL[id]}" fill-opacity="${act?.82:.18}" stroke="${COL[id]}" stroke-width="${S.hl===i?4:1.5}"><title>${NAME[id]}: ${fmt.usd1(xs[i])}/ticket, ${fmt.m2(ys[i]*1e6)} exposure, ${fmt.m2(rs[i])} at risk</title></circle>`;
+  s+=`<text x="${X(xs[i])}" y="${Y(ys[i])-rad-6}" text-anchor="middle" font-size="12" font-weight="800" fill="${act?'#2B1B14':'#C9B9AD'}">${NAME[id]}</text>`;});
+ $('#chFrontier').innerHTML=s+'</svg>';
+}
+function renderTable(){
+ const r=S.R.res,ids=['sq','co','fo','pb'];
+ const rows=[
+  ['Cost per ticket','cpt',fmt.usd1,true],['On-time, correct resolution','otc',fmt.pct1,false],['Resolved without a human','ai',fmt.pct1,false],
+  ['CSAT (modeled)','csat',v=>v.toFixed(1),false],['Compliance exposure','expo',fmt.m2,true],['Executive escalations','esc',fmt.int,true],
+  ['Revenue at risk','arr',fmt.m2,true],['Agent attrition (annualized)','attr',fmt.pct1,true],['Support headcount (end)','fte',fmt.int,true],
+  ['Total support cost (quarter)','cost',fmt.m2,true],['Expansion pipeline surfaced','pipe',fmt.m2,false],['Avg hours to resolve (human-handled)','wait',v=>v.toFixed(1)+' h',true]];
+ let h=`<table class="cmp"><thead><tr><th>Metric (full quarter, mean of ${S.seeds} seeds)</th>${ids.map(i=>`<th class="${i==='pb'?'pb':''}"><span class="dot" style="background:${COL[i]}"></span>${NAME[i]}</th>`).join('')}</tr></thead><tbody>`;
+ const lose=[];
+ rows.forEach(([lab,k,f,low])=>{const v=ids.map(i=>r[i].sc[k]);const best=low?Math.min(...v):Math.max(...v);
+  h+=`<tr><td>${lab}</td>${ids.map((i,j)=>{const isBest=Math.abs(v[j]-best)<1e-9*Math.max(1,Math.abs(best));let extra='';if(i==='pb')extra=`<small>P10–P90: ${f(r.pb.p10[k])} – ${f(r.pb.p90[k])}</small>`;return `<td class="${isBest?'best':''} ${i==='pb'?'pb':''}">${f(v[j])}${extra}</td>`;}).join('')}</tr>`;
+  const pbv=v[3];ids.slice(0,3).forEach((i,j)=>{const diff=low?pbv-v[j]:v[j]-pbv;const rel=Math.abs(diff)/Math.max(1e-9,Math.abs(v[j]));if(diff>0&&rel>.02)lose.push({rel,txt:`<b>${NAME[i]}</b> beats the playbook on <b>${lab.toLowerCase()}</b> (${f(v[j])} vs ${f(pbv)}).`});});});
+ $('#cmpTable').innerHTML=h+'</tbody></table>';
+ lose.sort((a,b)=>b.rel-a.rel);
+ $('#loses').innerHTML=`<b>Where the playbook does not win.</b>`+(lose.length?`<ul>${lose.slice(0,5).map(l=>`<li>${l.txt}</li>`).join('')}</ul><div style="margin-top:6px;color:var(--ink-2)">Those are the real trade-offs. Cost-out buys price with risk; the fortress buys safety with queues; the playbook buys balance with an up-front investment.</div>`:` <span style="color:var(--ink-2)">With these settings no other model leads on any tracked metric by more than 2%. Try the Break It stress tests or lower the AI gate.</span>`);
+}
+function renderDefs(){
+ const C=S.C;$('#modelDefs').innerHTML=`<ul style="padding-left:18px;margin:0">
+ <li><b>A · Status quo.</b> No AI deflection, cold shift handoffs, single FIFO queue, agents chase specialists without structured intake, managers at 1:15 and pulled into firefighting, no account-health scoring.</li>
+ <li><b>B · Cost-out AI.</b> AI live in two weeks at a 0.65 confidence gate across <i>all</i> countries and topics, no gold-set audit, hiring frozen, no other process change.</li>
+ <li><b>C · Specialist fortress.</b> Every regulated ticket routed to Payroll/Legal/Compliance (+40% specialist capacity), some intake structure, no AI.</li>
+ <li><b>D · Phased playbook.</b> Days 1–30 risk tiering, structured intake, decision trees, AI handoff summaries, enterprise priority lane, coaching protection. Days 31–60 audited AI on repeatable topics at a ${C.theta.toFixed(2)} gate${C.gate?', Tier-3 regulated topics gated':''}, with kill criteria${C.kill?' on':' off'}. Days 61–90 two-sided health scoring, expansion routing, manager span moving to 1:${C.span}. Overlap ${C.overlap}h.</li>
+ </ul><p style="margin:10px 0 0">Hiring: ${C.levelHiring?'models A, C and D all hire on a demand forecast (level playing field); B freezes hiring.':'A and C hire reactively; D hires on forecast; B freezes hiring.'} Specialist capacity is the same starting size for everyone and grows at half the pace of volume.</p>`;
+}
+function renderRhythm(){
+ const r=S.R.res,ids=['sq','co','fo','pb'];
+ const series=ids.map(i=>{const o=r[i].daily;const v=[];for(let d=0;d<90;d++)v.push(100*o.otc[d]/Math.max(1,o.tick[d]));return{data:ma(v,7),c:COL[i],w:i==='pb'?3.5:2,o:i==='pb'?1:.75};});
+ const sh=S.C.shocks,vl=[],marks=[];
+ if(sh.stat)vl.push({x:sh.stat,c:'#D63A3A',t:'Statutory change',dy:36});
+ if(sh.outage)vl.push({x:sh.outage,c:'#D63A3A',t:'Provider outage',dy:50});
+ if(sh.latam)vl.push({x:sh.latam,c:'#D63A3A',t:'LATAM surge',dy:64});
+ r.pb.events.forEach(e=>{if(e.type==='kill')marks.push({x:e.day,y:series[3].data[e.day-1],c:'#2B1B14',t:'Day '+e.day+': '+e.text});});
+ const ym=Math.max(40,Math.floor(Math.min(...series.map(s=>Math.min(...s.data)))/10)*10-5);
+ $('#chRhythm').innerHTML=lineChart({x0:1,x1:90,y0:Math.max(0,Math.min(ym,70)),y1:100,h:320,yf:v=>v+'%',series,vlines:vl,marks,play:S.day,label:'On-time correct resolution',
+  bands:[[1,30,'rgba(255,90,31,.05)','PHASE 1 · STABILIZE'],[30,60,'rgba(255,90,31,.10)','PHASE 2 · DEFLECT SAFELY'],[60,90,'rgba(255,90,31,.05)','PHASE 3 · RETAIN & EXPAND']]});
+ $('#lgRhythm').innerHTML=ids.map(i=>`<span><i style="background:${COL[i]}"></i>${NAME[i]}</span>`).join('')+`<span>◆ kill-criterion trip</span>`;
+}
+function renderPhases(){
+ const r=S.R.res,d=S.day,pb=r.pb,sq=r.sq;
+ const avgRange=(arr,a,b)=>{let s=0,n=0;for(let i=a-1;i<b;i++){s+=arr[i];n++;}return s/n;};
+ const waitAvg=(o,a,b)=>{let s=0,n=0;for(let i=a-1;i<b;i++){s+=o.waitS[i];n+=o.waitN[i];}return n?s/n:0;};
+ const spAvg=(o,a,b)=>{let s=0,n=0;for(let i=a-1;i<b;i++){s+=o.specWS[i];n+=o.specWN[i];}return n?s/n:0;};
+ const d1=Math.min(d,30);
+ const w1=waitAvg(pb.daily,24,30),w1s=waitAvg(sq.daily,24,30),sp1=spAvg(pb.daily,24,30),sp1s=spAvg(sq.daily,24,30);
+ const dd=Math.max(31,Math.min(d,60));
+ const aiP=100*(pb.cum.aiOK[dd-1]-pb.cum.aiOK[29])/Math.max(1,pb.cum.tick[dd-1]-pb.cum.tick[29]);
+ const err=100*pb.daily.err[dd-1];
+ const kills=pb.events.filter(e=>e.type==='kill'&&e.day<=d).length;
+ const expP=r.pb.cum.expo[Math.max(30,Math.min(d,60))-1]-r.pb.cum.expo[29];
+ const expC=r.co.cum.expo[Math.max(30,Math.min(d,60))-1]-r.co.cum.expo[29];
+ const dz=Math.max(61,d);const arrD=sq.daily.arrRisk[dz-1]-pb.daily.arrRisk[dz-1];
+ const pipeD=pb.cum.pipe[dz-1]-pb.cum.pipe[60];const pipeS=sq.cum.pipe[dz-1]-sq.cum.pipe[60];
+ const ind=(lab,val,ok)=>`<div class="ind"><span>${lab}</span><b class="${ok?'ok':'no'}">${ok?'● ':'○ '}${val}</b></div>`;
+ const cards=[
+  {n:'Phase 1 · Days 1–30',t:'Stabilize the machine',on:d>=1,ul:['Country-risk tiering and structured intake with decision trees','AI handoff summaries and enterprise priority lane','Coaching protected from firefighting'],
+   body:ind('Month-end week: hours to resolve',w1.toFixed(1)+' h vs '+w1s.toFixed(1)+' h',w1<=w1s)+ind('Specialist queue wait',sp1.toFixed(1)+' h vs '+sp1s.toFixed(1)+' h',sp1<=sp1s),
+   kill:'Gate to proceed: specialist wait and month-end resolution time beat the status quo before AI goes live.'},
+  {n:'Phase 2 · Days 31–60',t:'Deflect, safely',on:d>=31,ul:['Gold-set audited AI on repeatable Tier-1/2 topics','Tier-3 visa and statutory topics stay gated','Weekly audit cadence, rolling error tracked'],
+   body:d<31?'<div class="ind"><span>Starts on day 31</span><b>—</b></div>':ind('Share resolved without a human',aiP.toFixed(1)+'%',aiP>10)+ind('Rolling audited error',err.toFixed(1)+'% (limit '+(S.A.killThreshold*100).toFixed(1)+'%)',err/100<=S.A.killThreshold)+ind('Exposure vs cost-out model',fmt.m2(expP)+' vs '+fmt.m2(expC),expP<expC),
+   kill:`Kill criterion: halve AI scope for 7 days if rolling audited error exceeds ${(S.A.killThreshold*100).toFixed(1)}%. Tripped <b>${kills}</b> time${kills===1?'':'s'} so far in this run.${S.C.kill?'':' (Currently switched off.)'}`},
+  {n:'Phase 3 · Days 61–90',t:'Retain and expand',on:d>=61,ul:['Two-sided health score: enterprise admin and employee experience','Early-warning outreach before renewal conversations','Expansion signals routed to Account Managers'],
+   body:d<61?'<div class="ind"><span>Starts on day 61</span><b>—</b></div>':ind('Revenue at risk vs status quo',(arrD>=0?'−':'+')+fmt.m2(Math.abs(arrD)),arrD>0)+ind('Expansion pipeline surfaced',fmt.m2(pipeD)+' vs '+fmt.m2(pipeS),pipeD>pipeS)+ind('Agent attrition (annualized)',pb.sc.attr.toFixed(1)+'% vs '+sq.sc.attr.toFixed(1)+'%',pb.sc.attr<=sq.sc.attr),
+   kill:'Gate to proceed: health-score flags must precede churn conversations; if they do not, pause expansion routing and fix the data.'}];
+ $('#phases').innerHTML=cards.map(c=>`<div class="card phase" style="opacity:${c.on?1:.55}"><div class="n">${c.n}</div><h3>${c.t}</h3><ul>${c.ul.map(x=>`<li>${x}</li>`).join('')}</ul>${c.body}<div class="kill">${c.kill}</div></div>`).join('');
+}
+function renderFts(){
+ const r=S.R.res,W=640,H=290,pl=44,pr=12,pt=26,pb=36;
+ const a=r.sq.wbh,b=r.pb.wbh,ym=Math.max(...a,...b)*1.15||1;
+ const X=h=>pl+h*(W-pl-pr)/24,Y=v=>H-pb-v/ym*(H-pt-pb),bw=(W-pl-pr)/24;
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Hours to resolve by arrival hour">`;
+ [[1,9,'BENGALURU SHIFT','rgba(255,90,31,.05)'],[9,17,'LONDON SHIFT','rgba(255,90,31,.11)'],[17,24,'NEW YORK SHIFT','rgba(255,90,31,.05)']].forEach(([x0,x1,t,c])=>{s+=`<rect x="${X(x0)}" y="${pt-8}" width="${X(x1)-X(x0)}" height="${H-pb-pt+8}" fill="${c}"/><text x="${(X(x0)+X(x1))/2}" y="${pt}" text-anchor="middle" font-size="10" font-weight="700" fill="#A39388">${t}</text>`;});
+ niceTicks(0,ym,4).forEach(v=>{s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#F1DFD2"/><text x="${pl-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#A39388">${v}h</text>`;});
+ for(let h=0;h<24;h++){s+=`<rect x="${X(h)+2}" y="${Y(a[h])}" width="${bw/2-2}" height="${H-pb-Y(a[h])}" fill="${COL.sq}" rx="2"/><rect x="${X(h)+bw/2}" y="${Y(b[h])}" width="${bw/2-2}" height="${H-pb-Y(b[h])}" fill="${COL.pb}" rx="2"/>`;if(h%3===0)s+=`<text x="${X(h)+bw/2}" y="${H-18}" text-anchor="middle" font-size="10.5" fill="#A39388">${String(h).padStart(2,'0')}</text>`;}
+ [1,9,17].forEach(h=>{s+=`<line x1="${X(h)}" x2="${X(h)}" y1="${pt}" y2="${H-pb}" stroke="#2B1B14" stroke-dasharray="3 4" opacity=".5"/>`;});
+ if(S.hour>=0)s+=`<rect x="${X(S.hour)}" y="${pt-8}" width="${bw}" height="${H-pb-pt+8}" fill="none" stroke="#2B1B14" stroke-width="2" rx="3"/>`;
+ s+=`<text x="${(pl+W-pr)/2}" y="${H-3}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#6E5C52">Hour ticket arrives (UTC)</text></svg>`;
+ $('#chFts').innerHTML=s;
+ const worst=a.indexOf(Math.max(...a)),worstP=b.indexOf(Math.max(...b));
+ $('#ftsInsight').innerHTML=`<b>Reading the chart.</b> Status quo tickets that land at ${String(worst).padStart(2,'0')}:00 UTC wait longest (${a[worst].toFixed(1)} h on average). In the playbook the worst hour is ${String(worstP).padStart(2,'0')}:00 at ${b[worstP].toFixed(1)} h; the average across all hours falls from ${(a.reduce((x,y)=>x+y,0)/24).toFixed(1)} h to ${(b.reduce((x,y)=>x+y,0)/24).toFixed(1)} h.`;
+}
+function bandRow(lab,arr,anim){const t=arr.reduce((x,y)=>x+y,0)||1;const cls=['fire','red','amber','green'];
+ return `<div>${lab}</div><div class="seg">${arr.map((v,i)=>`<span class="${cls[i]}" style="width:${anim?0:100*v/t}%" data-w="${100*v/t}" title="${cls[i]}: ${fmt.m2(v)}"></span>`).join('')}</div><div class="r">${(100*(arr[0]+arr[1])/t).toFixed(0)}% F/R</div>`;}
+function renderHealth(anim){
+ const r=S.R.res;
+ ['sq','pb'].forEach(id=>{const b=r[id].bands;$('#bars'+(id==='sq'?'Sq':'Pb')).innerHTML=bandRow('HR / Finance admins',b.adm,anim)+bandRow('Employees (EX)',b.emp,anim)+bandRow('Composite',b.comp,anim);
+  const sc=r[id].sc;$('#h'+(id==='sq'?'Sq':'Pb')).innerHTML=`<div style="display:flex;gap:22px;flex-wrap:wrap"><div><div style="font-size:12px;color:var(--ink-2);font-weight:600">Revenue at risk</div><div style="font-size:22px;font-weight:800">${fmt.m2(sc.arr)}</div></div><div><div style="font-size:12px;color:var(--ink-2);font-weight:600">Expansion pipeline surfaced</div><div style="font-size:22px;font-weight:800">${fmt.m2(sc.pipe)}</div></div><div><div style="font-size:12px;color:var(--ink-2);font-weight:600">Expansion signals seen</div><div style="font-size:22px;font-weight:800">${Math.round(sc.sig)}</div></div></div>`;});
+ if(anim)requestAnimationFrame(()=>requestAnimationFrame(()=>$$('.bars .seg span').forEach(el=>el.style.width=el.dataset.w+'%')));
+}
+
+// ---------- controls ----------
+let CAL=null;
+const CTRL=[
+ {k:'theta',lab:'AI confidence gate',min:.6,max:.95,step:.01,f:v=>v.toFixed(2),hint:'Higher = fewer, safer AI answers. Lower = more deflection, more wrong answers.'},
+ {k:'overlap',lab:'Follow-the-sun overlap',min:0,max:4,step:.5,f:v=>v+' h',hint:'Live handoff window between regional shifts.'},
+ {k:'span',lab:'Manager span of control',min:6,max:16,step:1,f:v=>'1:'+v,hint:'Tighter span = more coaching, higher management cost.'},
+ {k:'specCap',lab:'Specialist capacity (Payroll · Legal · Compliance)',min:.6,max:1.6,step:.05,f:v=>Math.round(v*(CAL?CAL.S0:20))+' FTE',hint:'Applies to every model. Finite specialists are the real bottleneck.'},
+ {k:'growthQ',lab:'Volume growth over the quarter',min:0,max:1,step:.05,f:v=>'+'+Math.round(v*100)+'%',hint:'Applies to every model.'},
+ {k:'spike',lab:'Month-end payroll spike',min:1,max:3,step:.1,f:v=>v.toFixed(1)+'×',hint:'Peak-day multiplier in the last week of each month. Applies to every model.'}];
+const TOG=[
+ {k:'gate',lab:'Gate Tier-3 regulated topics (visa, tax, statutory) behind specialists'},
+ {k:'intake',lab:'Structured intake, decision trees and AI handoff summaries'},
+ {k:'health',lab:'Two-sided account-health scoring and expansion routing'},
+ {k:'kill',lab:'Kill criteria: auto-pause AI when audited error rises'},
+ {k:'phased',lab:'Phased 30/60/90 rollout (off = big-bang from day 1)'},
+ {k:'levelHiring',lab:'Level playing field: all models hire on forecast'}];
+function buildControls(){
+ $('#ctlSliders').innerHTML=CTRL.map(c=>`<div class="ctl"><div class="row"><span>${c.lab}</span><output id="o_${c.k}">${c.f(S.C[c.k])}</output></div><input type="range" id="c_${c.k}" min="${c.min}" max="${c.max}" step="${c.step}" value="${S.C[c.k]}"><small>${c.hint}</small></div>`).join('');
+ $('#ctlToggles').innerHTML=TOG.map(t=>`<label class="tog"><input type="checkbox" id="t_${t.k}" ${S.C[t.k]?'checked':''}><span>${t.lab}</span></label>`).join('');
+ CTRL.forEach(c=>$('#c_'+c.k).addEventListener('input',e=>{userTouch();S.C[c.k]=parseFloat(e.target.value);$('#o_'+c.k).textContent=c.f(S.C[c.k]);schedule();}));
+ TOG.forEach(t=>$('#t_'+t.k).addEventListener('change',e=>{userTouch();S.C[t.k]=e.target.checked;schedule();}));
+}
+function syncControls(){CTRL.forEach(c=>{$('#c_'+c.k).value=S.C[c.k];$('#o_'+c.k).textContent=c.f(S.C[c.k]);});TOG.forEach(t=>$('#t_'+t.k).checked=!!S.C[t.k]);}
+function buildAssumptions(){
+ const groups={};E.META.forEach(m=>{(groups[m[8]]=groups[m[8]]||[]).push(m);});
+ const tagN={pe:'Past Experience',ib:'Industry Benchmark',me:'Modeled Estimate'};
+ let h='<div class="agrid"><div>',i=0,half=Math.ceil(Object.keys(groups).length/2);
+ Object.keys(groups).forEach(g=>{if(i===half)h+='</div><div>';i++;h+=`<div class="agrp">${g}</div>`+groups[g].map(m=>`<div class="arow"><span>${m[1]}${m[2]?` <small style="color:var(--ink-3)">(${m[2]})</small>`:''}</span><input type="number" data-k="${m[0]}" min="${m[4]}" max="${m[5]}" step="${m[6]}" value="${S.A[m[0]]}"><span class="tag ${m[7]}">${tagN[m[7]]}</span></div>`).join('');});
+ $('#assume').innerHTML=h+'</div></div>';
+ $$('#assume input').forEach(el=>el.addEventListener('change',()=>{userTouch();const v=parseFloat(el.value);if(isFinite(v)){S.A[el.dataset.k]=v;schedule();}}));
+ $('#sensMetric').innerHTML=[['arr','Revenue at risk'],['cpt','Cost per ticket'],['otc','On-time correct %'],['expo','Compliance exposure']].map(a=>`<option value="${a[0]}">${a[1]}</option>`).join('');
+}
+async function runSens(){
+ const metric=$('#sensMetric').value;const btn=$('#sensRun');btn.disabled=true;btn.textContent='Running…';$('#tornado').innerHTML='<span class="spin"></span>Running ±25% on each assumption…';
+ await sleep(30);const t0=performance.now();const res=E.sensitivity(metric,S.C,S.A,.25,4);
+ const f={arr:fmt.m2,cpt:fmt.usd1,otc:v=>v.toFixed(1)+'%',expo:fmt.m2}[metric];
+ const rows=res.rows.slice(0,10),mx=Math.max(...rows.map(r=>Math.max(Math.abs(r.lo),Math.abs(r.hi))))||1;
+ $('#tornado').innerHTML=`<div style="margin:8px 0 10px">Baseline playbook: <b>${f(res.base)}</b>. Bars show change from baseline when the assumption moves −25% (left) and +25% (right).</div>`+rows.map(r=>{const lw=50*Math.abs(r.lo)/mx,hw=50*Math.abs(r.hi)/mx;const side=(v,w)=>`<div style="position:absolute;top:3px;height:16px;${v<0?`right:50%;`:`left:50%;`}width:${w}%;background:${v<0?'#2B1B14':'#FF5A1F'};opacity:${v<0?.85:1};border-radius:3px"></div>`;
+  return `<div style="display:grid;grid-template-columns:280px 1fr 120px;gap:10px;align-items:center;padding:3px 0;font-size:12.5px"><span>${r.label}</span><div style="position:relative;height:22px;background:var(--orange-50);border-radius:4px"><div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--ink-3)"></div>${side(r.lo,lw)}${side(r.hi,hw)}</div><span style="color:var(--ink-2);font-variant-numeric:tabular-nums">${r.lo<0?'':'+'}${f(res.base+r.lo)} / ${f(res.base+r.hi)}</span></div>`;}).join('')+`<div style="margin-top:8px;color:var(--ink-3)">Computed in ${Math.round(performance.now()-t0)} ms · dark = −25%, orange = +25%.</div>`;
+ btn.disabled=false;btn.textContent='Run sensitivity';
+}
+
+// ---------- break it ----------
+function renderBreak(){
+ const sh=S.C.shocks,active=sh.stat||sh.outage||sh.latam,out=$('#brkOut');
+ if(!active||!S.calm){$('#brkSub').textContent='Switch on a shock to compare.';out.innerHTML='<div style="color:var(--ink-3)">No shocks active. The playbook is running against calm demand.</div>';return;}
+ const st=S.R.res.pb,cl=S.calm,first=Math.min(...[sh.stat,sh.outage,sh.latam].filter(Boolean));
+ $('#brkSub').textContent='Playbook, mean of '+S.seeds+' seeds, shocks vs. same demand without shocks.';
+ const row=(lab,a,b,f,low)=>{const good=low?a<b:a>b;const diff=a-b;const same=Math.abs(diff)<1e-9;return `<tr><td>${lab}</td><td>${f(b)}</td><td><b>${f(a)}</b></td><td><span class="chip ${same?'flat':good?'good':'bad'}">${diff>=0?'+':'−'}${f(Math.abs(diff)).replace(/^\$/,'$')}</span></td></tr>`;};
+ const calmO=ma(Array.from(cl.daily.otc).map((v,i)=>100*v/Math.max(1,cl.daily.tick[i])),7),stO=ma(Array.from(st.daily.otc).map((v,i)=>100*v/Math.max(1,st.daily.tick[i])),7);
+ let low=0,rec=-1;for(let d=first;d<=90;d++){const gap=calmO[d-1]-stO[d-1];if(gap>low){low=gap;}}
+ let worstDay=first;for(let d=first;d<=90;d++)if(calmO[d-1]-stO[d-1]>=low-1e-9){worstDay=d;break;}
+ if(low>3){for(let d=worstDay;d<=88;d++){if(calmO[d-1]-stO[d-1]<1.5&&calmO[d]-stO[d]<1.5&&calmO[d+1]-stO[d+1]<1.5){rec=d;break;}}}
+ const kills=st.events.filter(e=>e.type==='kill').length,k0=cl.events.filter(e=>e.type==='kill').length;
+ out.innerHTML=`<table class="cmp"><thead><tr><th></th><th>Calm</th><th>Stressed</th><th>Δ</th></tr></thead><tbody>
+ ${row('On-time, correct resolution',st.sc.otc,cl.sc.otc,v=>v.toFixed(1)+'%',false)}
+ ${row('Cost per ticket',st.sc.cpt,cl.sc.cpt,v=>'$'+v.toFixed(1),true)}
+ ${row('Compliance exposure',st.sc.expo,cl.sc.expo,fmt.m2,true)}
+ ${row('Revenue at risk',st.sc.arr,cl.sc.arr,fmt.m2,true)}
+ ${row('Executive escalations',st.sc.esc,cl.sc.esc,fmt.int,true)}
+ </tbody></table>
+ <div class="insight"><b>${low>3?'Worst dip: −'+low.toFixed(1)+' pts of on-time correct resolution around day '+worstDay+'.':'Barely a dent in on-time correct resolution (worst gap '+low.toFixed(1)+' pts).'}</b> ${low>3?(rec>0?'Back within 1.5 pts of the calm path by day '+rec+' ('+(rec-worstDay)+' days after the worst point).':'Not back within 1.5 pts of the calm path before the quarter ends.'):''} Kill criterion tripped ${kills} time${kills===1?'':'s'} (vs ${k0} calm).${first<31?' The shock lands before AI goes live on day 31, so the defense is process, not AI.':''}</div>`;
+ S.breakInfo={low,worstDay,rec,kills};
+}
+function applyShockUI(){
+ const g=(c,d)=>$(c).checked?parseInt($(d).value):0;
+ S.C.shocks={stat:g('#shStat','#shStatD'),outage:g('#shOut','#shOutD'),latam:g('#shLat','#shLatD')};
+ $('#shStatO').textContent='day '+$('#shStatD').value;$('#shOutO').textContent='day '+$('#shOutD').value;$('#shLatO').textContent='day '+$('#shLatD').value;
+}
+function setShockUI(stat,out,lat){
+ $('#shStat').checked=!!stat;$('#shOut').checked=!!out;$('#shLat').checked=!!lat;
+ if(stat)$('#shStatD').value=stat;if(out)$('#shOutD').value=out;if(lat)$('#shLatD').value=lat;applyShockUI();
+}
+
+// ---------- memo ----------
+function memo(){
+ const r=S.R.res,pb=r.pb.sc,sq=r.sq.sc,pc=(a,b)=>100*(a-b)/b,sg=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(0)+'%';
+ const vol=100*(r.pb.daily.tick[89]/r.pb.daily.tick[0]-1);
+ const ftePB=100*(r.pb.daily.H[89]/r.pb.daily.H[0]-1),fteSQ=100*(r.sq.daily.H[89]/r.sq.daily.H[0]-1);
+ const tk=r.pb.daily.tick,w=(a,b)=>{let s=0;for(let i=a;i<b;i++)s+=tk[i];return s/(b-a);};const volG=100*(w(77,90)/w(0,13)-1);
+ const dArr=sq.arr-pb.arr,dCost=pb.cpt-sq.cpt;
+ const sec=[];
+ sec.push({h:'Headline',p:`Over a modeled 90-day quarter with demand growing about ${volG.toFixed(0)}%, the phased playbook runs at ${fmt.usd1(pb.cpt)} per ticket (${sg(pc(pb.cpt,sq.cpt))} vs status quo), resolves ${pb.otc.toFixed(1)}% of tickets on time and correctly (${(pb.otc-sq.otc>=0?'+':'−')+Math.abs(pb.otc-sq.otc).toFixed(1)} pts), and ends the quarter with ${fmt.m2(pb.arr)} of revenue at risk against ${fmt.m2(sq.arr)} (${dArr>=0?'−':'+'}${fmt.m2(Math.abs(dArr))}). Headcount grows ${ftePB.toFixed(0)}% under the playbook versus ${fteSQ.toFixed(0)}% under the status quo.`});
+ sec.push({h:'What we do, and when',ul:[
+  `<b>Days 1–30, stabilize.</b> Country-risk tiering, structured intake and decision trees, AI handoff summaries across three shifts, enterprise priority lane, coaching protection. Month-end resolution time falls to ${(()=>{let s=0,n=0;for(let i=23;i<30;i++){s+=r.pb.daily.waitS[i];n+=r.pb.daily.waitN[i];}return (s/n).toFixed(1);})()} h.`,
+  `<b>Days 31–60, deflect safely.</b> Audited AI on repeatable Tier-1/2 topics at a ${S.C.theta.toFixed(2)} confidence gate${S.C.gate?', Tier-3 regulated topics gated behind specialists':''}. ${pb.ai.toFixed(0)}% of tickets over the quarter never reach a human.`,
+  `<b>Days 61–90, retain and expand.</b> Two-sided health scoring, early-warning outreach and expansion routing surface ${fmt.m2(pb.pipe)} of expansion pipeline.`]});
+ const lose=[];['cpt','otc','expo','arr','csat','esc'].forEach(k=>{const low=['cpt','expo','arr','esc'].includes(k);['co','fo'].forEach(id=>{const v=r[id].sc[k],p=pb[k];if((low?v<p:v>p)&&Math.abs(v-p)/Math.abs(v||1)>.02)lose.push(`${NAME[id].slice(4)} leads on ${{cpt:'cost per ticket',otc:'on-time correct resolution',expo:'compliance exposure',arr:'revenue at risk',csat:'CSAT',esc:'executive escalations'}[k]}.`);});});
+ sec.push({h:'Trade-offs we are choosing',p:lose.length?`The model is clear that the playbook is not best at everything: ${[...new Set(lose)].join(' ')} We accept these because the alternatives either carry compliance exposure of ${fmt.m2(r.co.sc.expo)} (cost-out) or queue times that strain enterprise accounts (fortress).`:'No alternative model leads on a tracked metric by more than 2% under the current settings.'});
+ const kk=r.pb.events.filter(e=>e.type==='kill').length;
+ sec.push({h:'Guardrails',ul:[`AI scope halves automatically for a week when rolling audited error exceeds ${(S.A.killThreshold*100).toFixed(1)}% (tripped ${kk} time${kk===1?'':'s'} in this run).`,'Tier-3 visa, tax and statutory answers need specialist sign-off; agents never guess.','Phase gates: no AI launch until month-end resolution time and specialist wait beat today’s numbers; no expansion routing until health flags precede churn conversations.']});
+ const bi=S.breakInfo,sh=S.C.shocks;
+ sec.push({h:'Stress test',p:(sh.stat||sh.outage||sh.latam)&&bi?`With the selected shocks, on-time correct resolution dips by ${bi.low.toFixed(1)} pts at worst${bi.rec>0?' and recovers within about '+(bi.rec-bi.worstDay)+' days':bi.low>3?' and does not fully recover this quarter':''}.`:'Use the Break It panel to inject a statutory change, a provider outage or a LATAM expansion and see how the plan bends.'});
+ sec.push({h:'What we need from the business',ul:['Cross-functional SLAs with Payroll Ops, Compliance, Legal and Engineering, plus a formal Voice-of-the-Customer loop so Product fixes root causes.','Account Management and Customer Success aligned on one early-warning and expansion hand-off.',`Specialist capacity of about ${Math.round(S.C.specCap*r.pb.sc.S0)} FTE at the start of the quarter, growing with volume.`]});
+ const html=`<div class="hd"><b>Support operating model: 90-day modeled outcomes</b><div>From: Madhu Poonacha · For: CEO, COO, CTO · Illustrative seeded simulation (${S.seeds} runs), not Multiplier data</div></div>`+sec.map(s=>`<h4>${s.h}</h4>${s.p?`<p>${s.p}</p>`:''}${s.ul?`<ul>${s.ul.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}`).join('');
+ const text=html.replace(/<h4>/g,'\n\n').replace(/<\/h4>/g,'\n').replace(/<li>/g,'\n- ').replace(/<div>/g,'\n').replace(/<[^>]+>/g,'').trim();
+ return{html,text};
+}
+function renderMemo(){const m=memo();S.memoText=m.text;S.memoHTML=m.html;$('#memo').innerHTML=m.html;}
+function renderHero(){
+ const r=S.R.res,pb=r.pb.sc,sq=r.sq.sc;
+ const tk=r.pb.daily.tick,w=(a,b)=>{let s=0;for(let i=a;i<b;i++)s+=tk[i];return s/(b-a);};const volG=100*(w(77,90)/w(0,13)-1);
+ const ftePB=100*(r.pb.daily.H[89]/r.pb.daily.H[0]-1),fteSQ=100*(r.sq.daily.H[89]/r.sq.daily.H[0]-1);
+ $('#heroSentence').innerHTML=`Same quarter, same demand. As volume grows about <b>${volG.toFixed(0)}%</b>, the phased playbook adds <b>${ftePB.toFixed(0)}%</b> headcount (status quo: ${fteSQ.toFixed(0)}%), runs at <b>${fmt.usd1(pb.cpt)}</b> per ticket (${fmt.usd1(sq.cpt)}), lifts on-time correct resolution to <b>${pb.otc.toFixed(1)}%</b> (${sq.otc.toFixed(1)}%), and carries <b>${fmt.m2(pb.arr)}</b> of revenue at risk (${fmt.m2(sq.arr)}).`;
+}
+
+// ---------- recompute ----------
+let tmr=null,settle=null,running=false;
+function compute(seeds){
+ const t0=performance.now();S.seeds=seeds;
+ S.R=E.runAll(S.C,S.A,seeds);CAL=S.R.cal;
+ const sh=S.C.shocks;S.calm=(sh.stat||sh.outage||sh.latam)?E.runOne('pb',Object.assign({},S.C,{shocks:{stat:0,outage:0,latam:0}}),S.A,seeds):null;
+ S.ms=performance.now()-t0;
+}
+function renderAll(anim){
+ renderHero();renderDecouple();renderFrontier();renderTable();renderDefs();renderRhythm();renderPhases();renderFts();renderHealth(anim);renderBreak();renderMemo();renderKPIs();
+ $('#dayno').textContent='Day '+S.day;$('#phasetag').textContent=phaseOf(S.day)[0];
+ $('#runInfo').textContent=`Simulated ${S.seeds*4}${S.calm?'+'+S.seeds:''} runs × 2,160 hourly ticks in ${Math.round(S.ms)} ms.`;
+ syncControls();
+}
+function schedule(){
+ clearTimeout(tmr);clearTimeout(settle);$('#status').innerHTML='<span class="spin"></span>Re-simulating…';
+ tmr=setTimeout(()=>{applyShockUI();compute(3);renderAll(false);$('#status').textContent='Preview · refining…';settle=setTimeout(()=>{compute(8);renderAll(false);$('#status').textContent='Live · '+Math.round(S.ms)+' ms';},450);},70);
+}
+function recomputeNow(seeds){applyShockUI();compute(seeds||5);renderAll(false);$('#status').textContent='Live · '+Math.round(S.ms)+' ms';}
+
+// ---------- tour ----------
+const SC=[
+ {id:'s-hero',t:'The mandate',txt:()=>`Same 90 days of demand, four operating models. The playbook handles the growth at ${fmt.usd1(S.R.res.pb.sc.cpt)} per ticket and ${fmt.m2(S.R.res.pb.sc.arr)} of revenue at risk.`},
+ {id:'s-decouple',t:'Decouple headcount from volume',txt:()=>{const r=S.R.res;return `Volume rises about ${(100*(r.pb.daily.tick[89]/r.pb.daily.tick[0]-1)).toFixed(0)}% from day 1 to 90 (weekly rhythm included); playbook headcount ends at ${r.pb.sc.fte.toFixed(0)} vs ${r.sq.sc.fte.toFixed(0)} for the status quo.`;}},
+ {id:'cardFrontier',t:'Cost vs. risk',txt:()=>`Cost-out looks cheapest and carries ${fmt.m2(S.R.res.co.sc.expo)} of exposure. The fortress is safe but slow. The playbook sits where cost, risk and service balance.`},
+ {id:'s-rhythm',t:'90 days in 14 seconds',txt:()=>'Watch the phases switch on and the month-end peaks hit. Diamonds mark kill-criterion trips.'},
+ {id:'s-fts',t:'Follow-the-sun',txt:()=>'Tickets stall at shift boundaries. Handoff summaries, overlap and a priority lane flatten the curve.'},
+ {id:'s-health',t:'Two-sided account health',txt:()=>`Employees decide whether admins are happy. Early warning moves ${fmt.m2(S.R.res.sq.sc.arr-S.R.res.pb.sc.arr)} of revenue out of the risk bucket.`},
+ {id:'s-control',t:'Dial the trade-off',txt:()=>'Dragging the AI confidence gate down buys deflection and pays for it in exposure and escalations.'},
+ {id:'s-break',t:'Break it',txt:()=>'Injecting a statutory change on day 45 and a LATAM expansion on day 55.'},
+ {id:'s-memo',t:'The one-pager',txt:()=>'The memo is written from the numbers you just watched. Change a dial and it rewrites.'}];
+function buildSteps(){$('#steps').innerHTML=SC.map((s,i)=>`<i data-i="${i}" title="${s.t}"></i>`).join('');$$('#steps i').forEach(el=>el.addEventListener('click',()=>{goScene(parseInt(el.dataset.i),true);}));}
+function setCap(i){
+ $$('#steps i').forEach((el,k)=>{el.className=k<i?'done':k===i?'on':'';});
+ $('#cap').innerHTML=`<b>${i+1}/${SC.length} · ${SC[i].t}</b>${SC[i].txt()}`;
+}
+function scrollTo_(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});$$('.hl-ring').forEach(e=>e.classList.remove('hl-ring'));}
+async function w(ms,tok){const end=performance.now()+ms;while(performance.now()<end){if(tok!==S.tour.token)return false;await sleep(80);}return tok===S.tour.token;}
+async function animateSlider(k,to,steps,stepMs,tok){
+ const from=S.C[k];for(let i=1;i<=steps;i++){if(tok!==S.tour.token)return false;S.C[k]=from+(to-from)*i/steps;recomputeNow(4);await sleep(stepMs);}return tok===S.tour.token;
+}
+async function runScene(i,tok){
+ const sc=SC[i];S.tour.idx=i;setCap(i);S.draw=false;S.hl=-1;S.hour=-1;
+ scrollTo_(sc.id);
+ if(sc.id==='s-hero'){S.day=90;renderDay();await tweenKPIs(1400);return w(7500,tok);}
+ if(sc.id==='s-decouple'){S.draw=true;renderDecouple();await sleep(300);return w(8500,tok);}
+ if(sc.id==='cardFrontier'){for(let k=0;k<4;k++){S.hl=[3,1,2,0][k];renderFrontier();$('#cap').innerHTML=`<b>${i+1}/${SC.length} · Cost vs. risk</b>${['The playbook: ','Cost-out AI: ','Specialist fortress: ','Status quo: '][k]+(()=>{const id=['pb','co','fo','sq'][k],s=S.R.res[id].sc;return `${fmt.usd1(s.cpt)} per ticket, ${fmt.m2(s.expo)} exposure, ${s.otc.toFixed(1)}% on-time correct, ${fmt.m2(s.arr)} at risk.`;})()}`;if(!await w(2300,tok))return false;}S.hl=-1;renderFrontier();return true;}
+ if(sc.id==='s-rhythm'){S.draw=true;S.day=1;renderDay();await sleep(900);const t0=performance.now(),dur=14000;
+  while(true){if(tok!==S.tour.token)return false;const p=Math.min(1,(performance.now()-t0)/dur);const d=Math.max(1,Math.round(1+p*89));if(d!==S.day){S.day=d;renderDay();const ph=phaseOf(d)[0];const ev=S.R.res.pb.events.find(e=>e.day===d);$('#cap').innerHTML=`<b>${i+1}/${SC.length} · 90 days in 14 seconds</b>Day ${d} · ${ph}${(d>=24&&d<=30)||(d>=54&&d<=60)||d>=84?' · month-end payroll peak':''}${ev?' · '+ev.text:''}`;}if(p>=1)break;await sleep(60);}
+  S.draw=false;return w(1800,tok);}
+ if(sc.id==='s-fts'){for(let h=0;h<24;h++){S.hour=h;renderFts();const who=h>=1&&h<9?'Bengaluru shift':h>=9&&h<17?'London shift':'New York shift';$('#cap').innerHTML=`<b>${i+1}/${SC.length} · Follow-the-sun</b>${String(h).padStart(2,'0')}:00 UTC · ${who}${[1,9,17].includes(h)?' · handoff':''} · avg ${S.R.res.sq.wbh[h].toFixed(1)} h → ${S.R.res.pb.wbh[h].toFixed(1)} h to resolve`;if(!await w(330,tok))return false;}S.hour=-1;renderFts();return w(1200,tok);}
+ if(sc.id==='s-health'){renderHealth(true);return w(8500,tok);}
+ if(sc.id==='s-control'){const orig={theta:S.C.theta,overlap:S.C.overlap};
+  const snap=()=>{const p=S.R.res.pb.sc;return `exposure ${fmt.m2(p.expo)} · resolved by AI ${p.ai.toFixed(0)}% · escalations ${Math.round(p.esc)} · cost/ticket ${fmt.usd1(p.cpt)}`;};
+  $('#cap').innerHTML=`<b>${i+1}/${SC.length} · Dial the trade-off</b>AI gate at ${S.C.theta.toFixed(2)}: ${snap()}`;if(!await w(1800,tok))return false;
+  if(!await animateSlider('theta',.62,6,500,tok))return false;$('#cap').innerHTML=`<b>${i+1}/${SC.length} · Dial the trade-off</b>Gate down to ${S.C.theta.toFixed(2)}: ${snap()}`;if(!await w(2600,tok))return false;
+  if(!await animateSlider('theta',orig.theta,6,350,tok))return false;
+  if(!await animateSlider('overlap',0,3,350,tok))return false;$('#cap').innerHTML=`<b>${i+1}/${SC.length} · Dial the trade-off</b>Overlap removed (0 h): ${snap()}`;if(!await w(2200,tok))return false;
+  if(!await animateSlider('overlap',orig.overlap,3,350,tok))return false;recomputeNow(8);return w(1000,tok);}
+ if(sc.id==='s-break'){setShockUI(45,0,55);recomputeNow(6);const b=S.breakInfo||{};
+  $('#cap').innerHTML=`<b>${i+1}/${SC.length} · Break it</b>${b.low>3?`Worst dip −${b.low.toFixed(1)} pts around day ${b.worstDay}${b.rec>0?`, back on the calm path by day ${b.rec}`:', not fully recovered this quarter'}. Kill switch tripped ${b.kills||0}×.`:'The plan absorbs both shocks with little visible damage.'}`;
+  if(!await w(11000,tok))return false;setShockUI(0,0,0);recomputeNow(8);return true;}
+ if(sc.id==='s-memo'){const full=S.memoHTML;const el=$('#memo');const parts=full.split(/(?=<h4>)/);let acc='';for(const p of parts){acc+=p;el.innerHTML=acc;if(!await w(reduced?0:900,tok))return false;}el.innerHTML=full;return w(2500,tok);}
+ return true;
+}
+async function playFrom(i){
+ const tok=++S.tour.token;S.tour.playing=true;$('#tPlay').textContent='⏸ Pause';$('#replayTour').style.display='none';
+ for(let k=i;k<SC.length;k++){const ok=await runScene(k,tok);if(!ok||tok!==S.tour.token)return;}
+ if(tok===S.tour.token){S.tour.playing=false;$('#tPlay').textContent='↻ Replay';$('#cap').innerHTML=`<b>Tour complete</b>You are in control now. Drag a dial, break something, or edit an assumption.`;$$('#steps i').forEach(el=>el.className='done');$('#replayTour').style.display='inline-flex';S.draw=false;}
+}
+function pauseTour(){S.tour.token++;S.tour.playing=false;$('#tPlay').textContent='▶ Resume tour';}
+function goScene(i,play){i=(i+SC.length)%SC.length;S.tour.token++;setCap(i);S.draw=false;if(play)playFrom(i);else{S.tour.idx=i;scrollTo_(SC[i].id);}}
+function userTouch(){if(S.tour.playing)pauseTour();}
+
+// ---------- wiring ----------
+function wire(){
+ $('#tPlay').addEventListener('click',()=>{if(S.tour.playing){pauseTour();}else{const i=$('#tPlay').textContent.includes('Replay')?0:S.tour.idx;playFrom(i);}});
+ $('#tNext').addEventListener('click',()=>goScene(S.tour.idx+1,true));
+ $('#tPrev').addEventListener('click',()=>goScene(S.tour.idx-1,true));
+ $('#replayTour').addEventListener('click',()=>{S.tour.idx=0;playFrom(0);});
+ ['wheel','touchstart'].forEach(ev=>window.addEventListener(ev,()=>userTouch(),{passive:true}));
+ window.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)&&!/INPUT|SELECT/.test((e.target||{}).tagName||''))userTouch();});
+ $('#dayslider').addEventListener('input',e=>{userTouch();S.day=parseInt(e.target.value);renderDay();});
+ let dTok=0;$('#dPlay').addEventListener('click',async()=>{userTouch();const my=++dTok;S.day=1;renderDay();const t0=performance.now(),dur=12000;while(my===dTok){const p=Math.min(1,(performance.now()-t0)/dur);const d=Math.max(1,Math.round(1+p*89));if(d!==S.day){S.day=d;renderDay();}if(p>=1)break;await sleep(60);}});
+ $('#resetBtn').addEventListener('click',()=>{userTouch();const sh=S.C.shocks;S.C=clone(E.DEFC);S.C.shocks=sh;schedule();});
+ $('#resetA').addEventListener('click',()=>{userTouch();S.A=clone(E.DEF);buildAssumptions();$('#sensRun').addEventListener('click',runSens);schedule();});
+ ['shStat','shOut','shLat'].forEach(id=>$('#'+id).addEventListener('change',()=>{userTouch();schedule();}));
+ ['shStatD','shOutD','shLatD'].forEach(id=>$('#'+id).addEventListener('input',()=>{userTouch();applyShockUI();if(S.C.shocks.stat||S.C.shocks.outage||S.C.shocks.latam)schedule();}));
+ $('#copyMemo').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(S.memoText);$('#copyMemo').textContent='Copied ✓';}catch(e){const ta=document.createElement('textarea');ta.value=S.memoText;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();$('#copyMemo').textContent='Copied ✓';}setTimeout(()=>$('#copyMemo').textContent='Copy text',1600);});
+ $('#printMemo').addEventListener('click',()=>window.print());
+ $('#sensRun').addEventListener('click',runSens);
+}
+function init(){
+ buildSteps();buildControls();buildAssumptions();wire();
+ $('#status').innerHTML='<span class="spin"></span>Simulating…';
+ setTimeout(()=>{compute(8);renderAll(false);$('#status').textContent='Live · '+Math.round(S.ms)+' ms';setCap(0);
+  setTimeout(()=>{if(!S.tour.playing&&S.tour.idx===0&&!window.__noauto)playFrom(0);},1200);},40);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>
